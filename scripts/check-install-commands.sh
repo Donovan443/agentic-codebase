@@ -6,10 +6,20 @@ fail() {
   exit 1
 }
 
+find_fixed() {
+  local pattern="$1"
+  shift
+  if command -v rg >/dev/null 2>&1; then
+    rg -nF "$pattern" "$@"
+  else
+    grep -R -n -F -- "$pattern" "$@"
+  fi
+}
+
 assert_contains() {
   local pattern="$1"
   shift
-  if ! rg -nF "$pattern" "$@" >/dev/null; then
+  if ! find_fixed "$pattern" "$@" >/dev/null; then
     fail "Missing required install command: ${pattern}"
   fi
 }
