@@ -54,3 +54,5 @@ SPEC-*.md
 
 # Local runtime state
 .agentra/
+docs/REPO_HYGIENE.md
+ECOSYSTEM-CONVENTIONS.md
