@@ -1,0 +1,15 @@
+# Auto-detect text files
+* text=auto
+
+# Rust source
+*.rs text eol=lf
+*.toml text eol=lf
+
+# Binary files
+*.acb binary
+*.pdf binary
+*.svg binary
+*.png binary
+
+# Shell scripts
+*.sh text eol=lf

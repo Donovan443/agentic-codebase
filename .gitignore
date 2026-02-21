@@ -1,0 +1,55 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+
+# Test artifacts
+*.tmp
+*.bak
+
+# Planning docs build artifacts
+planning-docs/_build/
+planning-docs/.cache/
+
+# Internal docs / AI planning / prompt artifacts (do not publish)
+planning-docs/
+docs/planning/
+CLAUDE-CODE-INSTRUCTIONS*.md
+SPEC-*.md
+.claude/
+
+# Local runtime state
+.agentra/

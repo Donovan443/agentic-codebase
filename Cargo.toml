@@ -1,0 +1,102 @@
+[package]
+name = "agentic-codebase"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/agentralabs/agentic-codebase"
+homepage = "https://agentralabs.tech"
+documentation = "https://docs.rs/agentic-codebase"
+authors = ["Omoshola Owolabi"]
+description = "Semantic code compiler for AI agents - transforms codebases into navigable concept graphs"
+readme = "README.md"
+keywords = ["ai", "agents", "code-analysis", "semantic-graph", "mcp"]
+categories = ["development-tools", "parsing"]
+exclude = [".DS_Store", "planning-docs/", "target/"]
+
+[lib]
+name = "agentic_codebase"
+path = "src/lib.rs"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+# CLI binary
+[[bin]]
+name = "acb"
+path = "src/bin/acb.rs"
+
+# MCP server binary
+[[bin]]
+name = "acb-mcp"
+path = "src/bin/acb-mcp.rs"
+
+[dependencies]
+# Parsing - tree-sitter ecosystem
+tree-sitter = "0.22"
+tree-sitter-python = "0.21"
+tree-sitter-rust = "0.21"
+tree-sitter-typescript = "0.21"
+tree-sitter-javascript = "0.21"
+tree-sitter-go = "0.21"
+
+# Compression
+lz4_flex = "0.11"
+
+# Error handling
+thiserror = "2"
+
+# Logging / diagnostics
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
+rustyline = "14"
+
+# Serialization (for CLI/MCP JSON output, NOT for .acb format)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Memory mapping
+memmap2 = "0.9"
+
+# Timestamp
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+
+# File system traversal
+walkdir = "2"
+ignore = "0.4"
+
+# Hashing
+blake3 = "1"
+
+# Git integration (for temporal analysis)
+gix = { version = "0.63", default-features = false, features = ["basic", "blob-diff"] }
+
+# Configuration
+toml = "0.8"
+
+# HTTP server for SSE transport (optional)
+axum = { version = "0.7", optional = true }
+tower = { version = "0.4", optional = true }
+tower-http = { version = "0.5", features = ["cors"], optional = true }
+tokio = { version = "1", features = ["full"], optional = true }
+
+[features]
+default = ["stdio"]
+stdio = []
+sse = ["axum", "tower", "tower-http", "tokio"]
+all-transports = ["stdio", "sse"]
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+tempfile = "3"
+rand = "0.8"
+
+[[bench]]
+name = "benchmarks"
+harness = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
