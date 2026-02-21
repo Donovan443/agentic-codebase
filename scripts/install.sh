@@ -5,9 +5,6 @@
 # Usage:
 #   curl -fsSL https://agentralabs.tech/install/codebase | bash
 #
-# Future (when agentralabs.tech is live):
-#   curl -fsSL https://agentralabs.tech/install/codebase | sh
-#
 # Options:
 #   --version=X.Y.Z   Pin a specific version (default: latest)
 #   --dir=/path        Override install directory (default: ~/.local/bin)
@@ -77,10 +74,10 @@ check_deps() {
     done
 }
 
-# ── Get latest release tag ────────────────────────────────────────────
+# ── Get latest release tag (empty when unavailable) ──────────────────
 get_latest_version() {
-    curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
-        | jq -r '.tag_name'
+    curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
+        | jq -r '.tag_name // empty' 2>/dev/null || true
 }
 
 # ── Download and extract binary ──────────────────────────────────────
@@ -100,18 +97,61 @@ download_binary() {
 
     local tmpdir
     tmpdir="$(mktemp -d)"
-    trap 'rm -rf "$tmpdir"' EXIT
 
     mkdir -p "$INSTALL_DIR"
-    curl -fsSL "$url" -o "${tmpdir}/${asset_name}"
-    tar xzf "${tmpdir}/${asset_name}" -C "$tmpdir"
+    if ! curl -fsSL "$url" -o "${tmpdir}/${asset_name}"; then
+        rm -rf "$tmpdir"
+        return 1
+    fi
+    if ! tar xzf "${tmpdir}/${asset_name}" -C "$tmpdir"; then
+        rm -rf "$tmpdir"
+        return 1
+    fi
 
     # Copy both binaries (acb CLI + acb-mcp server)
     cp "${tmpdir}"/agentic-codebase-*/acb "${INSTALL_DIR}/acb" 2>/dev/null || true
     cp "${tmpdir}"/agentic-codebase-*/${BINARY_NAME} "${INSTALL_DIR}/${BINARY_NAME}"
     chmod +x "${INSTALL_DIR}/acb" 2>/dev/null || true
     chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
+    rm -rf "$tmpdir"
     echo "  Installed to ${INSTALL_DIR}/${BINARY_NAME}"
+}
+
+# ── Source fallback when release artifacts are unavailable ────────────
+install_from_source() {
+    echo "Installing from source (cargo fallback)..."
+
+    if ! command -v cargo &>/dev/null; then
+        echo "Error: release artifacts are unavailable and cargo is not installed." >&2
+        echo "Install Rust/Cargo first: https://rustup.rs" >&2
+        exit 1
+    fi
+
+    local source_ref=()
+    if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "latest" ]; then
+        source_ref=(--tag "${VERSION}")
+    fi
+
+    local git_url="https://github.com/${REPO}.git"
+    local cargo_bin="${CARGO_HOME:-$HOME/.cargo}/bin"
+    local source_ref_text=""
+    if [ "${#source_ref[@]}" -gt 0 ]; then
+        source_ref_text="${source_ref[*]} "
+    fi
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "  [dry-run] Would run: cargo install --git ${git_url} ${source_ref_text}--locked --force agentic-codebase"
+        echo "  [dry-run] Would copy from ${cargo_bin}/(acb,${BINARY_NAME}) to ${INSTALL_DIR}/"
+        return
+    fi
+
+    cargo install --git "${git_url}" "${source_ref[@]}" --locked --force agentic-codebase
+
+    mkdir -p "${INSTALL_DIR}"
+    cp "${cargo_bin}/acb" "${INSTALL_DIR}/acb"
+    cp "${cargo_bin}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
+    chmod +x "${INSTALL_DIR}/acb" "${INSTALL_DIR}/${BINARY_NAME}"
+    echo "  Installed from source to ${INSTALL_DIR}/acb and ${INSTALL_DIR}/${BINARY_NAME}"
 }
 
 # ── Merge MCP server into a config file ───────────────────────────────
@@ -191,17 +231,24 @@ main() {
     platform="$(detect_platform)"
     echo "Platform: ${platform}"
 
+    local installed_from_release=false
     if [ "$VERSION" = "latest" ]; then
         VERSION="$(get_latest_version)"
     fi
-    if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-        echo "Error: Could not determine latest release version." >&2
-        echo "  You can install from source: cargo install agentic-codebase" >&2
-        exit 1
+    if [ -n "$VERSION" ] && [ "$VERSION" != "null" ]; then
+        echo "Version: ${VERSION}"
+        if download_binary "$VERSION" "$platform"; then
+            installed_from_release=true
+        else
+            echo "Release artifact not found for ${VERSION}/${platform}; using source fallback."
+        fi
+    else
+        echo "No GitHub release found; using source fallback."
     fi
-    echo "Version: ${VERSION}"
 
-    download_binary "$VERSION" "$platform"
+    if [ "$installed_from_release" = false ]; then
+        install_from_source
+    fi
 
     echo ""
     echo "Configuring MCP clients..."
