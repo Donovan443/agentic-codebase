@@ -187,6 +187,10 @@ AgenticCodebase provides 24 query types across three tiers:
 
 ---
 
+## How It Works
+
+AgenticCodebase compiles source code into a semantic graph, writes it to a portable `.acb` binary, and serves query + MCP surfaces on top of that graph.
+
 ## Architecture
 
 AgenticCodebase models source code as a directed graph G = (U, E) where each vertex is a typed CodeUnit and each edge carries a semantic relationship.
