@@ -293,6 +293,7 @@ If `.acb/.amem/.avis` files are on another machine, sync them to the server firs
 | Autonomic profile | Conservative local-first posture | `ACB_AUTONOMIC_PROFILE=desktop|cloud|aggressive` |
 | Rolling backup | Compile writes checkpointed backups for existing outputs | `ACB_AUTO_BACKUP`, `ACB_AUTO_BACKUP_RETENTION`, `ACB_AUTO_BACKUP_DIR` |
 | Storage migration | Policy-gated with checkpointed auto-safe path | `ACB_STORAGE_MIGRATION_POLICY=auto-safe|strict|off` |
+| Storage budget policy | 20-year projection + backup rollup when budget pressure appears | `ACB_STORAGE_BUDGET_MODE=auto-rollup|warn|off`, `ACB_STORAGE_BUDGET_BYTES`, `ACB_STORAGE_BUDGET_HORIZON_YEARS`, `ACB_STORAGE_BUDGET_TARGET_FRACTION` |
 | Collective cache maintenance | Periodic expiry cleanup of collective cache entries | `ACB_COLLECTIVE_CACHE_MAINTENANCE_SECS` |
 | Maintenance throttling | SLA-aware under sustained registry load | `ACB_SLA_MAX_REGISTRY_OPS_PER_MIN` |
 | Health ledger | Periodic operational snapshots (default: `~/.agentra/health-ledger`) | `ACB_HEALTH_LEDGER_DIR`, `AGENTRA_HEALTH_LEDGER_DIR`, `ACB_HEALTH_LEDGER_EMIT_SECS` |

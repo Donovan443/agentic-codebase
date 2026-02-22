@@ -17,6 +17,7 @@ acb get
 acb completions
 acb health
 acb gate
+acb budget
 ```
 
 ## `acb compile`
@@ -68,6 +69,25 @@ acb gate <file.acb> --unit-id 42 --max-risk 0.55 --depth 4 --require-tests
 ```
 
 Fails with non-zero exit if risk/test criteria are not met (CI-friendly).
+
+## `acb budget`
+
+```bash
+acb budget <file.acb>
+acb budget <file.acb> --horizon-years 20 --max-bytes 2147483648
+acb budget <file.acb> --format json
+```
+
+Estimates long-horizon growth and reports whether the graph is on track for a fixed storage budget.
+
+Runtime policy env:
+
+```bash
+export ACB_STORAGE_BUDGET_MODE=auto-rollup
+export ACB_STORAGE_BUDGET_BYTES=2147483648
+export ACB_STORAGE_BUDGET_HORIZON_YEARS=20
+export ACB_STORAGE_BUDGET_TARGET_FRACTION=0.85
+```
 
 ## `acb-mcp`
 

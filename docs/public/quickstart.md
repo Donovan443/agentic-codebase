@@ -31,6 +31,7 @@ acb query project.acb dead-code
 ```bash
 acb health project.acb
 acb gate project.acb --unit-id 1 --max-risk 0.60 --require-tests
+acb budget project.acb --horizon-years 20 --max-bytes 2147483648
 ```
 
 ## 5. Start MCP server

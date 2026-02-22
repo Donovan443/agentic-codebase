@@ -22,6 +22,37 @@ use crate::parse::parser::{ParseOptions, Parser as AcbParser};
 use crate::semantic::analyzer::{AnalyzeOptions, SemanticAnalyzer};
 use crate::types::FileHeader;
 
+/// Default long-horizon storage budget target (2 GiB over 20 years).
+const DEFAULT_STORAGE_BUDGET_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+/// Default storage budget projection horizon.
+const DEFAULT_STORAGE_BUDGET_HORIZON_YEARS: u32 = 20;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StorageBudgetMode {
+    AutoRollup,
+    Warn,
+    Off,
+}
+
+impl StorageBudgetMode {
+    fn from_env(name: &str) -> Self {
+        let raw = read_env_string(name).unwrap_or_else(|| "auto-rollup".to_string());
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "warn" => Self::Warn,
+            "off" | "disabled" | "none" => Self::Off,
+            _ => Self::AutoRollup,
+        }
+    }
+
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::AutoRollup => "auto-rollup",
+            Self::Warn => "warn",
+            Self::Off => "off",
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // CLI definition
 // ---------------------------------------------------------------------------
@@ -226,6 +257,20 @@ pub enum Command {
         #[arg(long, default_value_t = true)]
         require_tests: bool,
     },
+
+    /// Estimate long-horizon storage usage against a fixed budget.
+    Budget {
+        /// Path to the .acb file.
+        file: PathBuf,
+
+        /// Max allowed bytes over the horizon.
+        #[arg(long, default_value_t = DEFAULT_STORAGE_BUDGET_BYTES)]
+        max_bytes: u64,
+
+        /// Projection horizon in years.
+        #[arg(long, default_value_t = DEFAULT_STORAGE_BUDGET_HORIZON_YEARS)]
+        horizon_years: u32,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -245,6 +290,7 @@ pub fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
         Some(Command::Completions { .. }) => "completions",
         Some(Command::Health { .. }) => "health",
         Some(Command::Gate { .. }) => "gate",
+        Some(Command::Budget { .. }) => "budget",
     };
     let started = Instant::now();
     let result = match &cli.command {
@@ -296,6 +342,11 @@ pub fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             depth,
             require_tests,
         }) => cmd_gate(file, *unit_id, *max_risk, *depth, *require_tests, &cli),
+        Some(Command::Budget {
+            file,
+            max_bytes,
+            horizon_years,
+        }) => cmd_budget(file, *max_bytes, *horizon_years, &cli),
     };
 
     emit_cli_health_ledger(command_name, started.elapsed(), result.is_ok());
@@ -538,6 +589,24 @@ fn cmd_compile(
 
     // Final output
     let file_size = std::fs::metadata(&out_path).map(|m| m.len()).unwrap_or(0);
+    let budget_report = match maybe_enforce_storage_budget_on_output(&out_path) {
+        Ok(report) => report,
+        Err(e) => {
+            tracing::warn!("ACB storage budget check skipped: {e}");
+            AcbStorageBudgetReport {
+                mode: "off",
+                max_bytes: DEFAULT_STORAGE_BUDGET_BYTES,
+                horizon_years: DEFAULT_STORAGE_BUDGET_HORIZON_YEARS,
+                target_fraction: 0.85,
+                current_size_bytes: file_size,
+                projected_size_bytes: None,
+                family_size_bytes: file_size,
+                over_budget: false,
+                backups_trimmed: 0,
+                bytes_freed: 0,
+            }
+        }
+    };
     let cov = &parse_result.stats.coverage;
     let coverage_json = serde_json::json!({
         "files_seen": cov.files_seen,
@@ -600,6 +669,28 @@ fn cmd_compile(
                     s.bold(&graph.languages().len().to_string())
                 );
                 let _ = writeln!(out, "     Size:      {}", s.dim(&format_size(file_size)));
+                if budget_report.over_budget {
+                    let projected = budget_report
+                        .projected_size_bytes
+                        .map(format_size)
+                        .unwrap_or_else(|| "unavailable".to_string());
+                    let _ = writeln!(
+                        out,
+                        "     Budget:    {} current={} projected={} limit={}",
+                        s.warn(),
+                        format_size(budget_report.current_size_bytes),
+                        projected,
+                        format_size(budget_report.max_bytes)
+                    );
+                }
+                if budget_report.backups_trimmed > 0 {
+                    let _ = writeln!(
+                        out,
+                        "     Budget fix: trimmed {} backups ({} freed)",
+                        budget_report.backups_trimmed,
+                        format_size(budget_report.bytes_freed)
+                    );
+                }
                 let _ = writeln!(
                     out,
                     "     Coverage:  seen={} candidate={} skipped={} errored={}",
@@ -636,6 +727,18 @@ fn cmd_compile(
                 "edges": graph.edge_count(),
                 "languages": graph.languages().len(),
                 "file_size_bytes": file_size,
+                "storage_budget": {
+                    "mode": budget_report.mode,
+                    "max_bytes": budget_report.max_bytes,
+                    "horizon_years": budget_report.horizon_years,
+                    "target_fraction": budget_report.target_fraction,
+                    "current_size_bytes": budget_report.current_size_bytes,
+                    "projected_size_bytes": budget_report.projected_size_bytes,
+                    "family_size_bytes": budget_report.family_size_bytes,
+                    "over_budget": budget_report.over_budget,
+                    "backups_trimmed": budget_report.backups_trimmed,
+                    "bytes_freed": budget_report.bytes_freed
+                },
                 "coverage": coverage_json,
             });
             let _ = writeln!(out, "{}", serde_json::to_string_pretty(&obj)?);
@@ -643,6 +746,165 @@ fn cmd_compile(
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct AcbStorageBudgetReport {
+    mode: &'static str,
+    max_bytes: u64,
+    horizon_years: u32,
+    target_fraction: f32,
+    current_size_bytes: u64,
+    projected_size_bytes: Option<u64>,
+    family_size_bytes: u64,
+    over_budget: bool,
+    backups_trimmed: usize,
+    bytes_freed: u64,
+}
+
+#[derive(Debug, Clone)]
+struct BackupEntry {
+    path: PathBuf,
+    size: u64,
+    modified: SystemTime,
+}
+
+fn maybe_enforce_storage_budget_on_output(
+    out_path: &Path,
+) -> Result<AcbStorageBudgetReport, Box<dyn std::error::Error>> {
+    let mode = StorageBudgetMode::from_env("ACB_STORAGE_BUDGET_MODE");
+    let max_bytes = read_env_u64("ACB_STORAGE_BUDGET_BYTES", DEFAULT_STORAGE_BUDGET_BYTES).max(1);
+    let horizon_years = read_env_u32(
+        "ACB_STORAGE_BUDGET_HORIZON_YEARS",
+        DEFAULT_STORAGE_BUDGET_HORIZON_YEARS,
+    )
+    .max(1);
+    let target_fraction =
+        read_env_f32("ACB_STORAGE_BUDGET_TARGET_FRACTION", 0.85).clamp(0.50, 0.99);
+
+    let current_meta = std::fs::metadata(out_path)?;
+    let current_size = current_meta.len();
+    let current_modified = current_meta.modified().unwrap_or(SystemTime::now());
+    let mut backups = list_backup_entries(out_path)?;
+    let mut family_size = current_size.saturating_add(backups.iter().map(|b| b.size).sum::<u64>());
+    let projected =
+        projected_size_from_samples(&backups, current_modified, current_size, horizon_years);
+    let over_budget = current_size > max_bytes || projected.map(|v| v > max_bytes).unwrap_or(false);
+
+    let mut trimmed = 0usize;
+    let mut bytes_freed = 0u64;
+
+    if mode == StorageBudgetMode::Warn && over_budget {
+        tracing::warn!(
+            "ACB storage budget warning: current={} projected={:?} limit={}",
+            current_size,
+            projected,
+            max_bytes
+        );
+    }
+
+    if mode == StorageBudgetMode::AutoRollup && (over_budget || family_size > max_bytes) {
+        let target_bytes = ((max_bytes as f64 * target_fraction as f64).round() as u64).max(1);
+        backups.sort_by_key(|b| b.modified);
+        for backup in backups {
+            if family_size <= target_bytes {
+                break;
+            }
+            if std::fs::remove_file(&backup.path).is_ok() {
+                family_size = family_size.saturating_sub(backup.size);
+                trimmed = trimmed.saturating_add(1);
+                bytes_freed = bytes_freed.saturating_add(backup.size);
+            }
+        }
+
+        if trimmed > 0 {
+            tracing::info!(
+                "ACB storage budget rollup: trimmed_backups={} freed_bytes={} family_size={}",
+                trimmed,
+                bytes_freed,
+                family_size
+            );
+        }
+    }
+
+    Ok(AcbStorageBudgetReport {
+        mode: mode.as_str(),
+        max_bytes,
+        horizon_years,
+        target_fraction,
+        current_size_bytes: current_size,
+        projected_size_bytes: projected,
+        family_size_bytes: family_size,
+        over_budget,
+        backups_trimmed: trimmed,
+        bytes_freed,
+    })
+}
+
+fn list_backup_entries(out_path: &Path) -> Result<Vec<BackupEntry>, Box<dyn std::error::Error>> {
+    let backups_dir = resolve_backup_dir(out_path);
+    if !backups_dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let original_name = out_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("graph.acb");
+
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(&backups_dir)? {
+        let entry = entry?;
+        let name = entry.file_name();
+        let Some(name_str) = name.to_str() else {
+            continue;
+        };
+        if !(name_str.starts_with(original_name) && name_str.ends_with(".bak")) {
+            continue;
+        }
+        let meta = entry.metadata()?;
+        out.push(BackupEntry {
+            path: entry.path(),
+            size: meta.len(),
+            modified: meta.modified().unwrap_or(SystemTime::UNIX_EPOCH),
+        });
+    }
+    Ok(out)
+}
+
+fn projected_size_from_samples(
+    backups: &[BackupEntry],
+    current_modified: SystemTime,
+    current_size: u64,
+    horizon_years: u32,
+) -> Option<u64> {
+    let mut samples = backups
+        .iter()
+        .map(|b| (b.modified, b.size))
+        .collect::<Vec<_>>();
+    samples.push((current_modified, current_size));
+    if samples.len() < 2 {
+        return None;
+    }
+    samples.sort_by_key(|(ts, _)| *ts);
+    let (first_ts, first_size) = samples.first().copied()?;
+    let (last_ts, last_size) = samples.last().copied()?;
+    if last_ts <= first_ts {
+        return None;
+    }
+    let span_secs = last_ts
+        .duration_since(first_ts)
+        .ok()?
+        .as_secs_f64()
+        .max(1.0);
+    let delta = (last_size as f64 - first_size as f64).max(0.0);
+    if delta <= 0.0 {
+        return Some(current_size);
+    }
+    let per_sec = delta / span_secs;
+    let horizon_secs = (horizon_years.max(1) as f64) * 365.25 * 24.0 * 3600.0;
+    let projected = (current_size as f64 + per_sec * horizon_secs).round();
+    Some(projected.max(0.0).min(u64::MAX as f64) as u64)
 }
 
 fn maybe_backup_existing_output(
@@ -711,6 +973,27 @@ fn read_env_string(name: &str) -> Option<String> {
     std::env::var(name).ok().map(|v| v.trim().to_string())
 }
 
+fn read_env_u64(name: &str, default_value: u64) -> u64 {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(default_value)
+}
+
+fn read_env_u32(name: &str, default_value: u32) -> u32 {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
+        .unwrap_or(default_value)
+}
+
+fn read_env_f32(name: &str, default_value: f32) -> f32 {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<f32>().ok())
+        .unwrap_or(default_value)
+}
+
 fn prune_old_backups(
     backup_dir: &Path,
     original_name: &str,
@@ -742,6 +1025,92 @@ fn prune_old_backups(
     let to_remove = backups.len().saturating_sub(retention);
     for entry in backups.into_iter().take(to_remove) {
         let _ = std::fs::remove_file(entry.path());
+    }
+    Ok(())
+}
+
+fn cmd_budget(
+    file: &Path,
+    max_bytes: u64,
+    horizon_years: u32,
+    cli: &Cli,
+) -> Result<(), Box<dyn std::error::Error>> {
+    validate_acb_path(file)?;
+    let s = styled(cli);
+    let current_meta = std::fs::metadata(file)?;
+    let current_size = current_meta.len();
+    let current_modified = current_meta.modified().unwrap_or(SystemTime::now());
+    let backups = list_backup_entries(file)?;
+    let family_size = current_size.saturating_add(backups.iter().map(|b| b.size).sum::<u64>());
+    let projected =
+        projected_size_from_samples(&backups, current_modified, current_size, horizon_years);
+    let over_budget = current_size > max_bytes || projected.map(|v| v > max_bytes).unwrap_or(false);
+    let daily_budget_bytes = max_bytes as f64 / ((horizon_years.max(1) as f64) * 365.25);
+
+    let stdout = std::io::stdout();
+    let mut out = stdout.lock();
+
+    match cli.format {
+        OutputFormat::Text => {
+            let status = if over_budget {
+                s.red("over-budget")
+            } else {
+                s.green("within-budget")
+            };
+            let _ = writeln!(out, "\n  {} {}\n", s.info(), s.bold("ACB Storage Budget"));
+            let _ = writeln!(out, "     File:      {}", file.display());
+            let _ = writeln!(out, "     Current:   {}", format_size(current_size));
+            if let Some(v) = projected {
+                let _ = writeln!(
+                    out,
+                    "     Projected: {} ({}y)",
+                    format_size(v),
+                    horizon_years
+                );
+            } else {
+                let _ = writeln!(
+                    out,
+                    "     Projected: unavailable (need backup history samples)"
+                );
+            }
+            let _ = writeln!(out, "     Family:    {}", format_size(family_size));
+            let _ = writeln!(out, "     Budget:    {}", format_size(max_bytes));
+            let _ = writeln!(out, "     Status:    {}", status);
+            let _ = writeln!(
+                out,
+                "     Guidance:  {:.1} KB/day target growth",
+                daily_budget_bytes / 1024.0
+            );
+            let _ = writeln!(
+                out,
+                "     Suggested env: ACB_STORAGE_BUDGET_MODE=auto-rollup ACB_STORAGE_BUDGET_BYTES={} ACB_STORAGE_BUDGET_HORIZON_YEARS={}",
+                max_bytes,
+                horizon_years
+            );
+            let _ = writeln!(out);
+        }
+        OutputFormat::Json => {
+            let obj = serde_json::json!({
+                "file": file.display().to_string(),
+                "current_size_bytes": current_size,
+                "projected_size_bytes": projected,
+                "family_size_bytes": family_size,
+                "max_budget_bytes": max_bytes,
+                "horizon_years": horizon_years,
+                "over_budget": over_budget,
+                "daily_budget_bytes": daily_budget_bytes,
+                "daily_budget_kb": daily_budget_bytes / 1024.0,
+                "guidance": {
+                    "recommended_policy_mode": if over_budget { "auto-rollup" } else { "warn" },
+                    "env": {
+                        "ACB_STORAGE_BUDGET_MODE": "auto-rollup|warn|off",
+                        "ACB_STORAGE_BUDGET_BYTES": max_bytes,
+                        "ACB_STORAGE_BUDGET_HORIZON_YEARS": horizon_years,
+                    }
+                }
+            });
+            let _ = writeln!(out, "{}", serde_json::to_string_pretty(&obj)?);
+        }
     }
     Ok(())
 }

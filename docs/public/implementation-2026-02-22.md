@@ -17,6 +17,14 @@ This page records the codebase-system upgrades implemented in this cycle.
      - `test-gap`
      - `hotspots`
      - `dead-code`
+5. Long-horizon storage budget policy:
+   - Added `acb budget` command for projection and budget guidance.
+   - Added compile-time storage policy:
+     - `ACB_STORAGE_BUDGET_MODE=auto-rollup|warn|off`
+     - `ACB_STORAGE_BUDGET_BYTES`
+     - `ACB_STORAGE_BUDGET_HORIZON_YEARS`
+     - `ACB_STORAGE_BUDGET_TARGET_FRACTION`
+   - `auto-rollup` mode trims oldest `.acb` backup lineage when budget pressure is detected.
 
 ## Why this matters
 
@@ -33,6 +41,7 @@ acb query repo.acb hotspots
 acb query repo.acb dead-code
 acb health repo.acb
 acb gate repo.acb --unit-id 42 --max-risk 0.60 --require-tests
+acb budget repo.acb --horizon-years 20 --max-bytes 2147483648
 ```
 
 ## Files changed
@@ -42,4 +51,3 @@ acb gate repo.acb --unit-id 42 --max-risk 0.60 --require-tests
 - `docs/public/command-surface.md`
 - `docs/public/quickstart.md`
 - `README.md`
-
