@@ -266,6 +266,17 @@ curl -fsSL https://agentralabs.tech/install/codebase/server | bash
 | GitHub installer (terminal profile) | `curl -fsSL https://agentralabs.tech/install/codebase/terminal \| bash` | Installs binaries only; no desktop config writes |
 | GitHub installer (server profile) | `curl -fsSL https://agentralabs.tech/install/codebase/server \| bash` | Installs binaries only; server-safe behavior |
 
+### Server auth and artifact sync
+
+For cloud/server runtime:
+
+```bash
+export AGENTIC_TOKEN="$(openssl rand -hex 32)"
+```
+
+All MCP clients must send `Authorization: Bearer <same-token>`.
+If `.acb/.amem/.avis` files are on another machine, sync them to the server first.
+
 ## Deployment Model
 
 - **Standalone by default:** AgenticCodebase is independently installable and operable. Integration with AgenticMemory or AgenticVision is optional, never required.

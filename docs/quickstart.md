@@ -25,6 +25,14 @@ curl -fsSL https://agentralabs.tech/install/codebase/terminal | bash
 curl -fsSL https://agentralabs.tech/install/codebase/server | bash
 ```
 
+For server mode:
+
+```bash
+export AGENTIC_TOKEN="$(openssl rand -hex 32)"
+```
+
+Cloud/server runtime cannot read laptop files directly. Sync `.acb/.amem/.avis` artifacts to server storage first.
+
 ### Cargo install
 
 ```bash
