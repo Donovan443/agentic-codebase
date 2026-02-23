@@ -364,14 +364,37 @@ resolve_repo_root() {
 
 slugify() {
     local raw="\$1"
+    local canonical
     local base
+    local digest
+    canonical="\$raw"
+    if command -v python3 >/dev/null 2>&1; then
+        canonical="\$(python3 - "\$raw" <<'PY'
+import os, sys
+print(os.path.realpath(sys.argv[1]))
+PY
+)"
+    elif [ -d "\$raw" ]; then
+        canonical="\$(cd "\$raw" 2>/dev/null && pwd -P || printf '%s' "\$raw")"
+    fi
     base="\$(basename "\$raw")"
     base="\$(printf '%s' "\$base" | tr '[:upper:]' '[:lower:]')"
     base="\$(printf '%s' "\$base" | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+\$//')"
     if [ -z "\$base" ]; then
         base="workspace"
     fi
-    printf '%s' "\$base"
+    if command -v shasum >/dev/null 2>&1; then
+        digest="\$(printf '%s' "\$canonical" | shasum -a 256 | awk '{print substr(\$1,1,12)}')"
+    elif command -v sha256sum >/dev/null 2>&1; then
+        digest="\$(printf '%s' "\$canonical" | sha256sum | awk '{print substr(\$1,1,12)}')"
+    else
+        digest="\$(printf '%s' "\$canonical" | cksum | awk '{print \$1}')"
+    fi
+    if [ -n "\$digest" ]; then
+        printf '%s-%s' "\$base" "\$digest"
+    else
+        printf '%s' "\$base"
+    fi
 }
 
 can_index_repo() {
@@ -417,9 +440,15 @@ lock_is_stale() {
 
     if [ -f "\$pid_file" ]; then
         lock_pid="\$(cat "\$pid_file" 2>/dev/null || true)"
-        if [ -n "\$lock_pid" ] && kill -0 "\$lock_pid" 2>/dev/null; then
-            return 1
+        if [ -n "\$lock_pid" ]; then
+            if kill -0 "\$lock_pid" 2>/dev/null; then
+                return 1
+            fi
+            # PID file exists but process is gone: stale immediately.
+            return 0
         fi
+        # Empty PID file is stale immediately.
+        return 0
     fi
 
     now="\$(date +%s)"
@@ -442,6 +471,8 @@ compile_graph_if_needed() {
     local pid_file="\${lock_dir}/pid"
     local wait_count=0
     local max_wait="\${AGENTRA_GRAPH_LOCK_WAIT_SECS:-90}"
+
+    mkdir -p "\$(dirname "\$graph_path")"
 
     acquire_lock() {
         mkdir "\$lock_dir" 2>/dev/null || return 1
@@ -513,7 +544,7 @@ resolve_graph() {
         return
     fi
 
-    local repo_root repo_slug graph_dir graph_path fallback
+    local repo_root repo_slug graph_dir graph_path
     repo_root="\$(resolve_repo_root)"
     graph_dir="\${AGENTRA_GRAPH_CACHE_DIR:-\${CODEX_HOME:-\$HOME/.codex}/graphs}"
     if ! is_common_path "\$repo_root"; then
@@ -526,12 +557,6 @@ resolve_graph() {
                 return
             fi
         fi
-    fi
-
-    fallback="\$(latest_cached_graph "\$graph_dir")"
-    if [ -n "\$fallback" ] && [ -f "\$fallback" ]; then
-        printf '%s' "\$fallback"
-        return
     fi
 
     for candidate in "\$HOME/.agentra/graphs/default.acb" "\$PWD/graph.acb"; do

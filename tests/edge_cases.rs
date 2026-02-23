@@ -358,8 +358,8 @@ fn edge_symbol_lookup_invalid_mode() {
             }
         }),
     );
-    // Should either error or default to a reasonable mode.
-    assert!(response.get("result").is_some() || response.get("error").is_some());
+    assert!(response.get("error").is_some());
+    assert_eq!(response["error"]["code"], -32602);
 }
 
 #[test]
@@ -429,8 +429,8 @@ fn edge_impact_analysis_negative_depth() {
             }
         }),
     );
-    // Negative depth should not cause a panic.
-    assert!(response.get("result").is_some() || response.get("error").is_some());
+    assert!(response.get("error").is_some());
+    assert_eq!(response["error"]["code"], -32602);
 }
 
 #[test]

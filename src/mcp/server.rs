@@ -180,7 +180,7 @@ impl McpServer {
                                 "graph": { "type": "string", "description": "Graph name" },
                                 "name": { "type": "string", "description": "Symbol name to search for" },
                                 "mode": { "type": "string", "enum": ["exact", "prefix", "contains", "fuzzy"], "default": "prefix" },
-                                "limit": { "type": "integer", "default": 10 }
+                                "limit": { "type": "integer", "minimum": 1, "default": 10 }
                             },
                             "required": ["name"]
                         }
@@ -193,7 +193,7 @@ impl McpServer {
                             "properties": {
                                 "graph": { "type": "string", "description": "Graph name" },
                                 "unit_id": { "type": "integer", "description": "Code unit ID to analyse" },
-                                "max_depth": { "type": "integer", "default": 3 }
+                                "max_depth": { "type": "integer", "minimum": 0, "default": 3 }
                             },
                             "required": ["unit_id"]
                         }
@@ -458,16 +458,23 @@ impl McpServer {
             }
         };
 
-        let mode = match args
+        let mode_raw = args
             .get("mode")
             .and_then(|v| v.as_str())
-            .unwrap_or("prefix")
-        {
+            .unwrap_or("prefix");
+        let mode = match mode_raw {
             "exact" => MatchMode::Exact,
             "prefix" => MatchMode::Prefix,
             "contains" => MatchMode::Contains,
             "fuzzy" => MatchMode::Fuzzy,
-            _ => MatchMode::Prefix,
+            _ => {
+                return JsonRpcResponse::error(
+                    id,
+                    JsonRpcError::invalid_params(format!(
+                        "Invalid 'mode': {mode_raw}. Expected one of: exact, prefix, contains, fuzzy"
+                    )),
+                );
+            }
         };
 
         let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
@@ -526,7 +533,31 @@ impl McpServer {
             }
         };
 
-        let max_depth = args.get("max_depth").and_then(|v| v.as_u64()).unwrap_or(3) as u32;
+        let max_depth = match args.get("max_depth") {
+            None => 3,
+            Some(v) => {
+                let depth = match v.as_i64() {
+                    Some(d) => d,
+                    None => {
+                        return JsonRpcResponse::error(
+                            id,
+                            JsonRpcError::invalid_params(
+                                "'max_depth' must be an integer >= 0",
+                            ),
+                        );
+                    }
+                };
+                if depth < 0 {
+                    return JsonRpcResponse::error(
+                        id,
+                        JsonRpcError::invalid_params(
+                            "'max_depth' must be >= 0",
+                        ),
+                    );
+                }
+                depth as u32
+            }
+        };
         let edge_types = vec![
             EdgeType::Calls,
             EdgeType::Imports,

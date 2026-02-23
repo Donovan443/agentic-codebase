@@ -4,7 +4,16 @@
 //! All logic lives in `agentic_codebase::mcp`.
 
 use clap::{Parser, Subcommand};
+use sha2::{Digest, Sha256};
+use std::env;
+use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::time::SystemTime;
+
+use agentic_codebase::engine::compile::{CompileOptions, CompilePipeline};
+use walkdir::WalkDir;
 
 #[derive(Parser)]
 #[command(
@@ -80,8 +89,10 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let graph_path = cli.graph;
-    let graph_name = cli.name;
+    let graph_path = cli.graph.or_else(auto_resolve_graph_path);
+    let graph_name = cli
+        .name
+        .or_else(|| graph_path.as_ref().map(|path| graph_name_from_path(path)));
 
     match cli.command {
         None | Some(Commands::Serve) => {
@@ -280,6 +291,293 @@ fn graph_name_from_path(path: &str) -> String {
         .to_string()
 }
 
+fn auto_resolve_graph_path() -> Option<String> {
+    // Respect standard resolution first when a concrete file exists.
+    let resolved = agentic_codebase::config::resolve_graph_path(None);
+    if Path::new(&resolved).is_file() {
+        return Some(resolved);
+    }
+
+    let repo_root = resolve_repo_root()?;
+    if is_common_root(&repo_root) {
+        return None;
+    }
+
+    let cache_dir = resolve_graph_cache_dir();
+    let graph_path = cache_dir.join(format!("{}.acb", repo_identity_key(&repo_root)));
+
+    if graph_is_stale(&repo_root, &graph_path) {
+        if let Err(err) = compile_graph_for_repo(&repo_root, &graph_path) {
+            tracing::warn!(
+                "Auto graph compile failed for '{}': {}",
+                repo_root.display(),
+                err
+            );
+        }
+    }
+
+    if graph_path.is_file() {
+        return Some(graph_path.to_string_lossy().to_string());
+    }
+
+    None
+}
+
+fn resolve_repo_root() -> Option<PathBuf> {
+    for key in ["AGENTRA_WORKSPACE_ROOT", "AGENTRA_PROJECT_ROOT"] {
+        if let Ok(value) = env::var(key) {
+            let path = PathBuf::from(value);
+            if path.is_dir() {
+                return Some(path);
+            }
+        }
+    }
+
+    if let Ok(output) = Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+    {
+        if output.status.success() {
+            let root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !root.is_empty() {
+                let path = PathBuf::from(root);
+                if path.is_dir() {
+                    return Some(path);
+                }
+            }
+        }
+    }
+
+    env::current_dir().ok().filter(|p| p.is_dir())
+}
+
+fn resolve_graph_cache_dir() -> PathBuf {
+    if let Ok(path) = env::var("AGENTRA_GRAPH_CACHE_DIR") {
+        return PathBuf::from(path);
+    }
+    if let Ok(codex_home) = env::var("CODEX_HOME") {
+        return Path::new(&codex_home).join("graphs");
+    }
+    if let Ok(home) = env::var("HOME").or_else(|_| env::var("USERPROFILE")) {
+        return Path::new(&home).join(".codex").join("graphs");
+    }
+    PathBuf::from(".acb")
+}
+
+fn is_common_root(path: &Path) -> bool {
+    if path == Path::new("/") {
+        return true;
+    }
+    let home = env::var("HOME").or_else(|_| env::var("USERPROFILE")).ok();
+    if let Some(home) = home {
+        let home = PathBuf::from(home);
+        return path == home || path == home.join("Documents") || path == home.join("Desktop");
+    }
+    false
+}
+
+fn repo_identity_key(path: &Path) -> String {
+    let raw_name = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("workspace");
+    let mut slug = String::with_capacity(raw_name.len());
+    for ch in raw_name.chars() {
+        let mapped = if ch.is_ascii_alphanumeric() || ch == '.' || ch == '_' || ch == '-' {
+            ch.to_ascii_lowercase()
+        } else {
+            '-'
+        };
+        slug.push(mapped);
+    }
+    let slug = slug.trim_matches('-').to_string();
+    let slug = if slug.is_empty() {
+        "workspace".to_string()
+    } else {
+        slug
+    };
+
+    let canonical = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let mut hasher = Sha256::new();
+    hasher.update(canonical.to_string_lossy().as_bytes());
+    let digest = hasher.finalize();
+    let hash12 = format!("{:x}", digest);
+    format!("{}-{}", slug, &hash12[..12])
+}
+
+fn graph_is_stale(repo_root: &Path, graph_path: &Path) -> bool {
+    if !graph_path.is_file() {
+        return true;
+    }
+
+    let graph_mtime = match fs::metadata(graph_path).and_then(|m| m.modified()) {
+        Ok(t) => t,
+        Err(_) => return true,
+    };
+
+    for entry in WalkDir::new(repo_root)
+        .into_iter()
+        .filter_entry(|e| !should_skip_path(e.path()))
+    {
+        let entry = match entry {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        if !entry.file_type().is_file() || !is_source_file(entry.path()) {
+            continue;
+        }
+        let modified = match entry.metadata() {
+            Ok(meta) => match meta.modified() {
+                Ok(ts) => ts,
+                Err(_) => continue,
+            },
+            Err(_) => continue,
+        };
+        if modified > graph_mtime {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn should_skip_path(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|s| s.to_str())
+        .map(|name| {
+            matches!(
+                name,
+                ".git"
+                    | "target"
+                    | "node_modules"
+                    | ".venv"
+                    | "venv"
+                    | "dist"
+                    | "build"
+                    | ".next"
+                    | ".cache"
+            )
+        })
+        .unwrap_or(false)
+}
+
+fn is_source_file(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|s| s.to_str()),
+        Some("rs")
+            | Some("py")
+            | Some("ts")
+            | Some("tsx")
+            | Some("js")
+            | Some("jsx")
+            | Some("go")
+            | Some("java")
+            | Some("c")
+            | Some("cc")
+            | Some("cpp")
+            | Some("h")
+            | Some("hpp")
+    )
+}
+
+fn compile_graph_for_repo(repo_root: &Path, graph_path: &Path) -> Result<(), String> {
+    if let Some(parent) = graph_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("create cache dir failed: {e}"))?;
+    }
+
+    with_graph_lock(graph_path, || {
+        if !graph_is_stale(repo_root, graph_path) {
+            return Ok(());
+        }
+        let mut options = CompileOptions::default();
+        options.output = graph_path.to_path_buf();
+
+        let pipeline = CompilePipeline::new();
+        pipeline
+            .compile_and_write(repo_root, &options)
+            .map(|_| ())
+            .map_err(|e| format!("{e}"))
+    })?;
+
+    let graph_mtime = fs::metadata(graph_path)
+        .and_then(|m| m.modified())
+        .unwrap_or(SystemTime::UNIX_EPOCH);
+    tracing::info!(
+        "Auto-indexed graph '{}' at {}",
+        graph_name_from_path(&graph_path.to_string_lossy()),
+        graph_path.display()
+    );
+    tracing::debug!("Graph mtime: {:?}", graph_mtime);
+    Ok(())
+}
+
+fn with_graph_lock<F>(graph_path: &Path, f: F) -> Result<(), String>
+where
+    F: FnOnce() -> Result<(), String>,
+{
+    let lock_dir = PathBuf::from(format!("{}.lock", graph_path.display()));
+    let pid_file = lock_dir.join("pid");
+    let max_wait = env::var("AGENTRA_GRAPH_LOCK_WAIT_SECS")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(90);
+    let stale_secs = env::var("AGENTRA_GRAPH_LOCK_STALE_SECS")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(300);
+
+    let mut waited = 0u64;
+    loop {
+        match fs::create_dir(&lock_dir) {
+            Ok(_) => {
+                let _ = fs::write(&pid_file, std::process::id().to_string());
+                break;
+            }
+            Err(_) => {
+                if lock_is_stale(&lock_dir, stale_secs) {
+                    let _ = fs::remove_dir_all(&lock_dir);
+                    continue;
+                }
+                if waited >= max_wait {
+                    if graph_path.is_file() {
+                        return Ok(());
+                    }
+                    return Err(format!(
+                        "graph build lock timeout for {}",
+                        graph_path.display()
+                    ));
+                }
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                waited += 1;
+            }
+        }
+    }
+
+    struct LockGuard {
+        lock_dir: PathBuf,
+        pid_file: PathBuf,
+    }
+    impl Drop for LockGuard {
+        fn drop(&mut self) {
+            let _ = fs::remove_file(&self.pid_file);
+            let _ = fs::remove_dir(&self.lock_dir);
+        }
+    }
+    let _guard = LockGuard { lock_dir, pid_file };
+    f()
+}
+
+fn lock_is_stale(lock_dir: &Path, stale_secs: u64) -> bool {
+    let modified = match fs::metadata(lock_dir).and_then(|m| m.modified()) {
+        Ok(m) => m,
+        Err(_) => return true,
+    };
+    match SystemTime::now().duration_since(modified) {
+        Ok(age) => age.as_secs() >= stale_secs,
+        Err(_) => true,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -325,5 +623,22 @@ mod tests {
         assert!(output.contains("Content-Length:"));
         assert!(output.contains("\"id\":1"));
         assert!(output.contains("\"id\":2"));
+    }
+
+    #[test]
+    fn repo_identity_key_is_deterministic() {
+        let path = PathBuf::from("/tmp/project-alpha");
+        let a = repo_identity_key(&path);
+        let b = repo_identity_key(&path);
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn repo_identity_key_differs_for_same_basename_in_different_paths() {
+        let a = PathBuf::from("/tmp/team-a/service");
+        let b = PathBuf::from("/tmp/team-b/service");
+        let ka = repo_identity_key(&a);
+        let kb = repo_identity_key(&b);
+        assert_ne!(ka, kb);
     }
 }
