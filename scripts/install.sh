@@ -305,6 +305,21 @@ pwd_contains_projects() {
         -print -quit 2>/dev/null | grep -q .
 }
 
+is_common_root_dir() {
+    [ "\$PWD" = "\$HOME" ] || \
+    [ "\$PWD" = "\$HOME/Documents" ] || \
+    [ "\$PWD" = "\$HOME/Desktop" ] || \
+    [ "\$PWD" = "/" ]
+}
+
+is_common_path() {
+    local path="\$1"
+    [ "\$path" = "\$HOME" ] || \
+    [ "\$path" = "\$HOME/Documents" ] || \
+    [ "\$path" = "\$HOME/Desktop" ] || \
+    [ "\$path" = "/" ]
+}
+
 resolve_repo_root() {
     if [ -n "\${AGENTRA_WORKSPACE_ROOT:-}" ] && [ -d "\${AGENTRA_WORKSPACE_ROOT}" ]; then
         printf '%s' "\${AGENTRA_WORKSPACE_ROOT}"
@@ -314,19 +329,33 @@ resolve_repo_root() {
         printf '%s' "\${AGENTRA_PROJECT_ROOT}"
         return
     fi
-    if pwd_is_project || pwd_contains_projects; then
-        printf '%s' "\$PWD"
-        return
-    fi
     if command -v git >/dev/null 2>&1; then
         local root
         root="\$(git rev-parse --show-toplevel 2>/dev/null || true)"
         if [ -n "\$root" ] && [ -d "\$root" ]; then
-            if [ "\$root" = "\$HOME" ] || [ "\$root" = "\$HOME/Documents" ] || [ "\$root" = "\$HOME/Desktop" ]; then
+            if [ "\$root" != "\$HOME" ] && [ "\$root" != "\$HOME/Documents" ] && [ "\$root" != "\$HOME/Desktop" ] && [ "\$root" != "/" ]; then
+                printf '%s' "\$root"
+                return
+            fi
+        fi
+    fi
+    if pwd_is_project; then
+        printf '%s' "\$PWD"
+        return
+    fi
+    if ! is_common_root_dir && pwd_contains_projects; then
+        printf '%s' "\$PWD"
+        return
+    fi
+    if command -v git >/dev/null 2>&1; then
+        local root_fallback
+        root_fallback="\$(git rev-parse --show-toplevel 2>/dev/null || true)"
+        if [ -n "\$root_fallback" ] && [ -d "\$root_fallback" ]; then
+            if [ "\$root_fallback" = "\$HOME" ] || [ "\$root_fallback" = "\$HOME/Documents" ] || [ "\$root_fallback" = "\$HOME/Desktop" ] || [ "\$root_fallback" = "/" ]; then
                 printf '%s' "\$PWD"
                 return
             fi
-            printf '%s' "\$root"
+            printf '%s' "\$root_fallback"
             return
         fi
     fi
@@ -347,7 +376,7 @@ slugify() {
 
 can_index_repo() {
     local repo_root="\$1"
-    if [ "\$repo_root" = "\$HOME" ]; then
+    if is_common_path "\$repo_root"; then
         return 1
     fi
     if command -v git >/dev/null 2>&1 && git -C "\$repo_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -433,6 +462,9 @@ resolve_graph() {
 
     local repo_root repo_slug graph_dir graph_path fallback
     repo_root="\$(resolve_repo_root)"
+    if is_common_path "\$repo_root"; then
+        return
+    fi
     repo_slug="\$(slugify "\$repo_root")"
     graph_dir="\${AGENTRA_GRAPH_CACHE_DIR:-\${CODEX_HOME:-\$HOME/.codex}/graphs}"
     graph_path="\${graph_dir}/\${repo_slug}.acb"
@@ -474,17 +506,6 @@ for arg in "\${args[@]}"; do
     esac
 done
 
-if [ "\$has_graph" -eq 0 ]; then
-    graph_path="\$(resolve_graph || true)"
-    if [ -n "\$graph_path" ]; then
-        args=(--graph "\$graph_path" "\${args[@]}")
-        if [ "\$has_name" -eq 0 ]; then
-            graph_name="\$(basename "\$graph_path" .acb | sed -E 's/[^a-zA-Z0-9._-]+/-/g')"
-            args=(--name "\$graph_name" "\${args[@]}")
-        fi
-    fi
-fi
-
 if [ "\$has_command" -eq 0 ]; then
     serve_requested=1
     args+=("serve")
@@ -495,6 +516,17 @@ if [ "\$serve_requested" -eq 1 ]; then
         if [ -z "\${AGENTIC_TOKEN:-}" ] && [ -z "\${AGENTIC_TOKEN_FILE:-}" ] && [ -z "\${AGENTRA_AUTH_TOKEN_FILE:-}" ]; then
             echo "Error: server mode requires AGENTIC_TOKEN or AGENTIC_TOKEN_FILE." >&2
             exit 2
+        fi
+    fi
+fi
+
+if [ "\$has_graph" -eq 0 ]; then
+    graph_path="\$(resolve_graph || true)"
+    if [ -n "\$graph_path" ]; then
+        args=(--graph "\$graph_path" "\${args[@]}")
+        if [ "\$has_name" -eq 0 ]; then
+            graph_name="\$(basename "\$graph_path" .acb | sed -E 's/[^a-zA-Z0-9._-]+/-/g')"
+            args=(--name "\$graph_name" "\${args[@]}")
         fi
     fi
 fi
