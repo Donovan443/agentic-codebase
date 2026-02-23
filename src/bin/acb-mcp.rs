@@ -489,8 +489,10 @@ fn compile_graph_for_repo(repo_root: &Path, graph_path: &Path) -> Result<(), Str
         if !graph_is_stale(repo_root, graph_path) {
             return Ok(());
         }
-        let mut options = CompileOptions::default();
-        options.output = graph_path.to_path_buf();
+        let options = CompileOptions {
+            output: graph_path.to_path_buf(),
+            ..CompileOptions::default()
+        };
 
         let pipeline = CompilePipeline::new();
         pipeline
