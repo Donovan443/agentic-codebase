@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-02-23
+
+### Fixed
+- Hardened MCP graph lock handling to recover from stale lockfiles and avoid deadlock under concurrent launches.
+- Ensured repo graph resolution falls back safely when common root detection does not yield a graph path.
+- Improved per-repo auto-indexing reliability so `graph_stats` no longer fails with empty graph state during normal startup races.
+
 ## [0.1.2] - 2026-02-23
 
 ### Fixed
