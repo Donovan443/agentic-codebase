@@ -1,0 +1,20 @@
+{
+  "key": "codebase",
+  "name": "AgenticCodebase",
+  "include_landing": true,
+  "page_ids": [
+    "overview",
+    "experience-with-vs-without",
+    "quickstart",
+    "installation",
+    "command-surface",
+    "runtime-install-sync",
+    "integration-guide",
+    "concepts",
+    "api-reference",
+    "file-format",
+    "benchmarks",
+    "faq"
+  ],
+  "slug_by_id": {}
+}
