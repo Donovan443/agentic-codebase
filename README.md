@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="#quickstart">Quickstart</a> · <a href="#why-agenticcodebase">Why</a> · <a href="#benchmarks">Benchmarks</a> · <a href="#the-query-engine">Query Engine</a> · <a href="#mcp-server">MCP Server</a> · <a href="#install">Install</a> · <a href="INSTALL.md">Full Install Guide</a> · <a href="docs/api-reference.md">API</a> · <a href="paper/paper-i-semantic-compiler/agenticcodebase-paper.pdf">Paper</a>
+  <a href="#quickstart">Quickstart</a> · <a href="#problems-solved">Problems Solved</a> · <a href="#why-agenticcodebase">Why</a> · <a href="#benchmarks">Benchmarks</a> · <a href="#the-query-engine">Query Engine</a> · <a href="#mcp-server">MCP Server</a> · <a href="#install">Install</a> · <a href="INSTALL.md">Full Install Guide</a> · <a href="docs/api-reference.md">API</a> · <a href="paper/paper-i-semantic-compiler/agenticcodebase-paper.pdf">Paper</a>
 </p>
 
 ---
@@ -22,6 +22,21 @@ Your agent reads a file, analyzes one function, and forgets. Next session -- bla
 RAG over source files doesn't work. You get "similar text," never *"what breaks if I change this?"*. Embedding chunks loses all structure -- no call graphs, no dependency chains, no type relationships. Grep is fast but flat.
 
 **AgenticCodebase** compiles your repository into a navigable concept graph stored in a single binary file. Not "search your source code." Your agent has a **map** -- functions, classes, modules, imports, call chains, type hierarchies -- all connected, all queryable in microseconds.
+
+<a name="problems-solved"></a>
+
+## Problems Solved (Read This First)
+
+- **Problem:** AI coding sessions reset to zero and lose project understanding.  
+  **Solved:** `.acb` stores persistent semantic structure so the next session resumes with context.
+- **Problem:** "What breaks if I change this?" is guesswork.  
+  **Solved:** native impact analysis over typed dependency and call graphs.
+- **Problem:** text search finds strings, not system behavior.  
+  **Solved:** graph-native queries for symbols, relationships, risk, and likely breakpoints.
+- **Problem:** cross-project work becomes brittle and manual.  
+  **Solved:** compile each repo into its own graph artifact and query them independently.
+- **Problem:** MCP coding clients see raw files but not deep code semantics.  
+  **Solved:** `acb-mcp` exposes the graph to MCP clients for structured code intelligence.
 
 ```bash
 # Compile any repository (Python, Rust, TypeScript, Go)
