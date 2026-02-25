@@ -1224,14 +1224,14 @@ impl McpServer {
             self.workspace_manager
                 .list(raw)
                 .map(|_| raw.to_string())
-                .map_err(|e| JsonRpcError::invalid_params(e))
+                .map_err(JsonRpcError::invalid_params)
         } else {
             // Try to find by name — iterate all workspaces. We need to expose
             // this through the manager. For now, just treat it as an ID.
             self.workspace_manager
                 .list(raw)
                 .map(|_| raw.to_string())
-                .map_err(|e| JsonRpcError::invalid_params(e))
+                .map_err(JsonRpcError::invalid_params)
         }
     }
 
@@ -1296,7 +1296,7 @@ impl McpServer {
             .get("role")
             .and_then(|v| v.as_str())
             .unwrap_or("source");
-        let role = match ContextRole::from_str(role_str) {
+        let role = match ContextRole::parse_str(role_str) {
             Some(r) => r,
             None => {
                 return JsonRpcResponse::error(
@@ -1576,7 +1576,7 @@ impl McpServer {
             .get("status")
             .and_then(|v| v.as_str())
             .unwrap_or("not_started");
-        let status = match TranslationStatus::from_str(status_str) {
+        let status = match TranslationStatus::parse_str(status_str) {
             Some(s) => s,
             None => {
                 return JsonRpcResponse::error(

@@ -381,11 +381,11 @@ fn test_workspace_not_found_error() {
 #[test]
 fn test_context_role_roundtrip() {
     for label in &["source", "target", "reference", "comparison"] {
-        let role = ContextRole::from_str(label).unwrap();
+        let role = ContextRole::parse_str(label).unwrap();
         assert_eq!(role.label(), *label);
     }
-    assert!(ContextRole::from_str("invalid").is_none());
+    assert!(ContextRole::parse_str("invalid").is_none());
     // Case-insensitive.
-    assert_eq!(ContextRole::from_str("SOURCE"), Some(ContextRole::Source));
-    assert_eq!(ContextRole::from_str("Target"), Some(ContextRole::Target));
+    assert_eq!(ContextRole::parse_str("SOURCE"), Some(ContextRole::Source));
+    assert_eq!(ContextRole::parse_str("Target"), Some(ContextRole::Target));
 }

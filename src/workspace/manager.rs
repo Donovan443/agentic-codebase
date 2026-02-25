@@ -33,7 +33,7 @@ impl ContextRole {
     /// Parse a role from a string (case-insensitive).
     ///
     /// Returns `None` if the string does not match any known role.
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "source" => Some(Self::Source),
             "target" => Some(Self::Target),
@@ -642,10 +642,10 @@ mod tests {
     #[test]
     fn context_role_roundtrip() {
         for label in &["source", "target", "reference", "comparison"] {
-            let role = ContextRole::from_str(label).unwrap();
+            let role = ContextRole::parse_str(label).unwrap();
             assert_eq!(role.label(), *label);
         }
-        assert!(ContextRole::from_str("invalid").is_none());
+        assert!(ContextRole::parse_str("invalid").is_none());
     }
 
     #[test]

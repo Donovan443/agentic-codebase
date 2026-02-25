@@ -29,7 +29,7 @@ impl TranslationStatus {
     ///
     /// Accepts both hyphenated (`"not-started"`, `"in-progress"`) and
     /// underscore (`"not_started"`, `"in_progress"`) variants.
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse_str(s: &str) -> Option<Self> {
         match s.to_lowercase().replace('-', "_").as_str() {
             "not_started" => Some(Self::NotStarted),
             "in_progress" => Some(Self::InProgress),
@@ -317,19 +317,19 @@ mod tests {
             "verified",
             "skipped",
         ] {
-            let status = TranslationStatus::from_str(label).unwrap();
+            let status = TranslationStatus::parse_str(label).unwrap();
             assert_eq!(status.label(), *label);
         }
         // Also accept hyphenated forms.
         assert_eq!(
-            TranslationStatus::from_str("not-started"),
+            TranslationStatus::parse_str("not-started"),
             Some(TranslationStatus::NotStarted)
         );
         assert_eq!(
-            TranslationStatus::from_str("in-progress"),
+            TranslationStatus::parse_str("in-progress"),
             Some(TranslationStatus::InProgress)
         );
-        assert!(TranslationStatus::from_str("bogus").is_none());
+        assert!(TranslationStatus::parse_str("bogus").is_none());
     }
 
     #[test]

@@ -356,17 +356,17 @@ fn test_translation_status_roundtrip() {
         "verified",
         "skipped",
     ] {
-        let status = TranslationStatus::from_str(label).unwrap();
+        let status = TranslationStatus::parse_str(label).unwrap();
         assert_eq!(status.label(), *label);
     }
     // Hyphenated forms.
     assert_eq!(
-        TranslationStatus::from_str("not-started"),
+        TranslationStatus::parse_str("not-started"),
         Some(TranslationStatus::NotStarted)
     );
     assert_eq!(
-        TranslationStatus::from_str("in-progress"),
+        TranslationStatus::parse_str("in-progress"),
         Some(TranslationStatus::InProgress)
     );
-    assert!(TranslationStatus::from_str("invalid").is_none());
+    assert!(TranslationStatus::parse_str("invalid").is_none());
 }

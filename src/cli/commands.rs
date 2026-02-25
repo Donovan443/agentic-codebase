@@ -594,7 +594,7 @@ fn build_workspace_manager(
     let ws_id = manager.create(workspace);
 
     for ctx in contexts {
-        let role = ContextRole::from_str(&ctx.role).unwrap_or(ContextRole::Source);
+        let role = ContextRole::parse_str(&ctx.role).unwrap_or(ContextRole::Source);
         let graph = AcbReader::read_from_file(Path::new(&ctx.path))?;
         manager.add_context(&ws_id, &ctx.path, role, ctx.language.clone(), graph)?;
     }
@@ -602,7 +602,7 @@ fn build_workspace_manager(
     Ok((manager, ws_id, state))
 }
 
-fn cmd_init(file: &PathBuf, cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_init(file: &Path, cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
     if file.extension().and_then(|e| e.to_str()) != Some("acb") {
         return Err("init target must use .acb extension".into());
     }
@@ -627,7 +627,7 @@ fn cmd_init(file: &PathBuf, cli: &Cli) -> Result<(), Box<dyn std::error::Error>>
 }
 
 fn cmd_export_graph(
-    file: &PathBuf,
+    file: &Path,
     output: Option<&Path>,
     cli: &Cli,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -664,7 +664,7 @@ fn cmd_export_graph(
     Ok(())
 }
 
-fn cmd_ground(file: &PathBuf, claim: &str, cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_ground(file: &Path, claim: &str, cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
     validate_acb_path(file)?;
     let graph = AcbReader::read_from_file(file)?;
     let engine = GroundingEngine::new(&graph);
@@ -745,7 +745,7 @@ fn cmd_ground(file: &PathBuf, claim: &str, cli: &Cli) -> Result<(), Box<dyn std:
 }
 
 fn cmd_evidence(
-    file: &PathBuf,
+    file: &Path,
     query: &str,
     limit: usize,
     cli: &Cli,
@@ -787,7 +787,7 @@ fn cmd_evidence(
 }
 
 fn cmd_suggest(
-    file: &PathBuf,
+    file: &Path,
     query: &str,
     limit: usize,
     cli: &Cli,

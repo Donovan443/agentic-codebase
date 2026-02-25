@@ -378,10 +378,8 @@ impl<'g> Grounded for GroundingEngine<'g> {
 
             // Edit distance
             let dist = levenshtein(&lower, &unit_lower);
-            if dist <= threshold && dist > 0 {
-                if !candidates.iter().any(|(n, _)| *n == unit.name) {
-                    candidates.push((unit.name.clone(), dist));
-                }
+            if dist <= threshold && dist > 0 && !candidates.iter().any(|(n, _)| *n == unit.name) {
+                candidates.push((unit.name.clone(), dist));
             }
         }
 
