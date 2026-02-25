@@ -1,13 +1,13 @@
 [package]
 default-run = "acb"
 name = "agentic-codebase"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/agentralabs/agentic-codebase"
 homepage = "https://agentralabs.tech"
 documentation = "https://docs.rs/agentic-codebase"
-authors = ["Omoshola Owolabi"]
+authors = ["Agentra Labs <contact@agentralabs.tech>"]
 description = "Semantic code compiler for AI agents - transforms codebases into navigable concept graphs"
 readme = "README.md"
 keywords = ["ai", "agents", "code-analysis", "semantic-graph", "mcp"]
