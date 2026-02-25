@@ -359,22 +359,13 @@ pub enum WorkspaceCommand {
     List { workspace: String },
 
     /// Query symbols across all workspace contexts.
-    Query {
-        workspace: String,
-        query: String,
-    },
+    Query { workspace: String, query: String },
 
     /// Compare a symbol across contexts.
-    Compare {
-        workspace: String,
-        symbol: String,
-    },
+    Compare { workspace: String, symbol: String },
 
     /// Cross-reference a symbol across contexts.
-    Xref {
-        workspace: String,
-        symbol: String,
-    },
+    Xref { workspace: String, symbol: String },
 }
 
 // ---------------------------------------------------------------------------
@@ -565,7 +556,9 @@ fn workspace_state_path() -> PathBuf {
         .ok()
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    home.join(".agentic").join("codebase").join("workspaces.json")
+    home.join(".agentic")
+        .join("codebase")
+        .join("workspaces.json")
 }
 
 fn load_workspace_state() -> Result<WorkspaceState, Box<dyn std::error::Error>> {
@@ -823,10 +816,7 @@ fn cmd_suggest(
     Ok(())
 }
 
-fn cmd_workspace(
-    command: &WorkspaceCommand,
-    cli: &Cli,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn cmd_workspace(command: &WorkspaceCommand, cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
     match command {
         WorkspaceCommand::Create { name } => {
             let mut state = load_workspace_state()?;
@@ -962,7 +952,12 @@ fn cmd_workspace(
             } else {
                 println!("Comparison for {:?}:", symbol);
                 for c in comparison.contexts {
-                    println!("  - {} ({}) found={}", c.context_id, c.role.label(), c.found);
+                    println!(
+                        "  - {} ({}) found={}",
+                        c.context_id,
+                        c.role.label(),
+                        c.found
+                    );
                 }
             }
             Ok(())

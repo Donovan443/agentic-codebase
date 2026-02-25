@@ -525,7 +525,13 @@ mod tests {
         let mut mgr = WorkspaceManager::new();
         let ws = mgr.create("migration");
         let ctx = mgr
-            .add_context(&ws, "/src/cpp", ContextRole::Source, Some("C++".into()), make_graph("foo", None))
+            .add_context(
+                &ws,
+                "/src/cpp",
+                ContextRole::Source,
+                Some("C++".into()),
+                make_graph("foo", None),
+            )
             .unwrap();
         assert!(ctx.starts_with("ctx-"));
 
@@ -538,8 +544,22 @@ mod tests {
     fn query_all_finds_symbol() {
         let mut mgr = WorkspaceManager::new();
         let ws = mgr.create("q");
-        mgr.add_context(&ws, "/a", ContextRole::Source, None, make_graph("process", None)).unwrap();
-        mgr.add_context(&ws, "/b", ContextRole::Target, None, make_graph("other", None)).unwrap();
+        mgr.add_context(
+            &ws,
+            "/a",
+            ContextRole::Source,
+            None,
+            make_graph("process", None),
+        )
+        .unwrap();
+        mgr.add_context(
+            &ws,
+            "/b",
+            ContextRole::Target,
+            None,
+            make_graph("other", None),
+        )
+        .unwrap();
 
         let results = mgr.query_all(&ws, "proc").unwrap();
         assert_eq!(results.len(), 1);
@@ -551,7 +571,13 @@ mod tests {
         let mut mgr = WorkspaceManager::new();
         let ws = mgr.create("q2");
         let ctx = mgr
-            .add_context(&ws, "/a", ContextRole::Source, None, make_graph("alpha", None))
+            .add_context(
+                &ws,
+                "/a",
+                ContextRole::Source,
+                None,
+                make_graph("alpha", None),
+            )
             .unwrap();
 
         let matches = mgr.query_context(&ws, &ctx, "alph").unwrap();
@@ -563,8 +589,22 @@ mod tests {
     fn compare_detects_signature_diff() {
         let mut mgr = WorkspaceManager::new();
         let ws = mgr.create("cmp");
-        mgr.add_context(&ws, "/a", ContextRole::Source, None, make_graph("foo", Some("(int) -> bool"))).unwrap();
-        mgr.add_context(&ws, "/b", ContextRole::Target, None, make_graph("foo", Some("(i32) -> bool"))).unwrap();
+        mgr.add_context(
+            &ws,
+            "/a",
+            ContextRole::Source,
+            None,
+            make_graph("foo", Some("(int) -> bool")),
+        )
+        .unwrap();
+        mgr.add_context(
+            &ws,
+            "/b",
+            ContextRole::Target,
+            None,
+            make_graph("foo", Some("(i32) -> bool")),
+        )
+        .unwrap();
 
         let cmp = mgr.compare(&ws, "foo").unwrap();
         assert_eq!(cmp.contexts.len(), 2);
@@ -577,8 +617,22 @@ mod tests {
     fn cross_reference_found_and_missing() {
         let mut mgr = WorkspaceManager::new();
         let ws = mgr.create("xref");
-        mgr.add_context(&ws, "/a", ContextRole::Source, None, make_graph("bar", None)).unwrap();
-        mgr.add_context(&ws, "/b", ContextRole::Target, None, make_graph("other", None)).unwrap();
+        mgr.add_context(
+            &ws,
+            "/a",
+            ContextRole::Source,
+            None,
+            make_graph("bar", None),
+        )
+        .unwrap();
+        mgr.add_context(
+            &ws,
+            "/b",
+            ContextRole::Target,
+            None,
+            make_graph("other", None),
+        )
+        .unwrap();
 
         let xref = mgr.cross_reference(&ws, "bar").unwrap();
         assert_eq!(xref.found_in.len(), 1);

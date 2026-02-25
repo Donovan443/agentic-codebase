@@ -13,9 +13,7 @@ use crate::engine::QueryEngine;
 use crate::graph::CodeGraph;
 use crate::grounding::{Grounded, GroundingEngine, GroundingResult};
 use crate::types::{CodeUnitType, EdgeType};
-use crate::workspace::{
-    ContextRole, TranslationMap, TranslationStatus, WorkspaceManager,
-};
+use crate::workspace::{ContextRole, TranslationMap, TranslationStatus, WorkspaceManager};
 
 use super::protocol::{JsonRpcError, JsonRpcRequest, JsonRpcResponse};
 
@@ -1030,7 +1028,10 @@ impl McpServer {
             }
         };
 
-        let strict = args.get("strict").and_then(|v| v.as_bool()).unwrap_or(false);
+        let strict = args
+            .get("strict")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
 
         let engine = GroundingEngine::new(graph);
         let result = engine.ground_claim(claim);
@@ -1212,7 +1213,9 @@ impl McpServer {
                 .workspace_manager
                 .get_active()
                 .map(|s| s.to_string())
-                .ok_or_else(|| JsonRpcError::invalid_params("No workspace specified and none active"));
+                .ok_or_else(|| {
+                    JsonRpcError::invalid_params("No workspace specified and none active")
+                });
         }
 
         // If it looks like a workspace ID (starts with "ws-"), use directly.
@@ -1586,10 +1589,7 @@ impl McpServer {
             }
         };
 
-        let notes = args
-            .get("notes")
-            .and_then(|v| v.as_str())
-            .map(String::from);
+        let notes = args.get("notes").and_then(|v| v.as_str()).map(String::from);
 
         // Get or create translation map for this workspace.
         // Use workspace's first source and first target context IDs.

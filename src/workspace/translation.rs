@@ -293,16 +293,30 @@ mod tests {
         tm.record("s4", Some("t4"), TranslationStatus::Verified, None);
         tm.record("s5", None, TranslationStatus::Skipped, None);
 
-        let rem: Vec<_> = tm.remaining().iter().map(|m| m.source_symbol.as_str()).collect();
+        let rem: Vec<_> = tm
+            .remaining()
+            .iter()
+            .map(|m| m.source_symbol.as_str())
+            .collect();
         assert_eq!(rem, vec!["s1", "s2"]);
 
-        let done: Vec<_> = tm.completed().iter().map(|m| m.source_symbol.as_str()).collect();
+        let done: Vec<_> = tm
+            .completed()
+            .iter()
+            .map(|m| m.source_symbol.as_str())
+            .collect();
         assert_eq!(done, vec!["s3", "s4", "s5"]);
     }
 
     #[test]
     fn translation_status_roundtrip() {
-        for label in &["not_started", "in_progress", "ported", "verified", "skipped"] {
+        for label in &[
+            "not_started",
+            "in_progress",
+            "ported",
+            "verified",
+            "skipped",
+        ] {
             let status = TranslationStatus::from_str(label).unwrap();
             assert_eq!(status.label(), *label);
         }

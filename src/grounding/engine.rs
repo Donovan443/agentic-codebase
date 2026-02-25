@@ -15,9 +15,9 @@ const STOP_WORDS: &[&str] = &[
     "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where",
     "why", "how", "all", "each", "every", "both", "few", "more", "most", "other", "some", "such",
     "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "just", "because",
-    "but", "and", "or", "if", "while", "that", "this", "these", "those", "it", "its", "my",
-    "your", "his", "her", "our", "their", "what", "which", "who", "whom", "we", "you", "he",
-    "she", "they", "me", "him", "us", "them", "i",
+    "but", "and", "or", "if", "while", "that", "this", "these", "those", "it", "its", "my", "your",
+    "his", "her", "our", "their", "what", "which", "who", "whom", "we", "you", "he", "she", "they",
+    "me", "him", "us", "them", "i",
 ];
 
 // ── Pattern detection helpers (no regex crate) ──────────────────────────────
@@ -472,8 +472,7 @@ mod tests {
 
     #[test]
     fn extract_screaming_case_refs() {
-        let refs =
-            extract_code_references("The constant MAX_EDGES_PER_UNIT limits the edge count");
+        let refs = extract_code_references("The constant MAX_EDGES_PER_UNIT limits the edge count");
         assert!(refs.contains(&"MAX_EDGES_PER_UNIT".to_string()));
     }
 
@@ -504,10 +503,7 @@ mod tests {
         let refs = extract_code_references(
             "`process_payment` calls process_payment to handle the process_payment flow",
         );
-        let count = refs
-            .iter()
-            .filter(|r| *r == "process_payment")
-            .count();
+        let count = refs.iter().filter(|r| *r == "process_payment").count();
         assert_eq!(count, 1);
     }
 
@@ -520,7 +516,10 @@ mod tests {
 
         let result = engine.ground_claim("The process_payment function exists");
         match result {
-            GroundingResult::Verified { evidence, confidence } => {
+            GroundingResult::Verified {
+                evidence,
+                confidence,
+            } => {
                 assert!(!evidence.is_empty());
                 assert!(confidence > 0.0);
                 assert_eq!(evidence[0].name, "process_payment");
@@ -548,8 +547,7 @@ mod tests {
         let graph = test_graph();
         let engine = GroundingEngine::new(&graph);
 
-        let result =
-            engine.ground_claim("process_payment calls send_notification after success");
+        let result = engine.ground_claim("process_payment calls send_notification after success");
         match result {
             GroundingResult::Partial {
                 supported,

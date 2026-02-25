@@ -61,7 +61,10 @@ fn rust_graph_complete() -> CodeGraph {
     let mut graph = CodeGraph::with_default_dimension();
     let symbols = vec![
         ("parse_config", "fn parse_config(path: &str) -> Config"),
-        ("process_request", "fn process_request(req: Request) -> Response"),
+        (
+            "process_request",
+            "fn process_request(req: Request) -> Response",
+        ),
         ("validate_input", "fn validate_input(input: &Input) -> bool"),
         ("send_response", "fn send_response(resp: Response)"),
         ("log_error", "fn log_error(msg: &str)"),
@@ -95,10 +98,22 @@ fn test_migration_workflow_cpp_to_rust() {
     let rust_partial = rust_graph_partial();
 
     let src_ctx = mgr
-        .add_context(&ws, "/src/cpp", ContextRole::Source, Some("C++".into()), cpp)
+        .add_context(
+            &ws,
+            "/src/cpp",
+            ContextRole::Source,
+            Some("C++".into()),
+            cpp,
+        )
         .unwrap();
     let tgt_ctx = mgr
-        .add_context(&ws, "/src/rust", ContextRole::Target, Some("Rust".into()), rust_partial)
+        .add_context(
+            &ws,
+            "/src/rust",
+            ContextRole::Target,
+            Some("Rust".into()),
+            rust_partial,
+        )
         .unwrap();
 
     // Step 2: Query source for all symbols.
@@ -111,15 +126,39 @@ fn test_migration_workflow_cpp_to_rust() {
 
     let xref_send = mgr.cross_reference(&ws, "send_response").unwrap();
     assert_eq!(xref_send.found_in.len(), 1, "send_response only in source");
-    assert_eq!(xref_send.missing_from.len(), 1, "send_response missing from target");
+    assert_eq!(
+        xref_send.missing_from.len(),
+        1,
+        "send_response missing from target"
+    );
 
     // Step 4: Record translation progress.
     let mut tmap = TranslationMap::new(src_ctx.clone(), tgt_ctx.clone());
-    tmap.record("parse_config", Some("parse_config"), TranslationStatus::Verified, None);
-    tmap.record("validate_input", Some("validate_input"), TranslationStatus::Ported, None);
-    tmap.record("process_request", None, TranslationStatus::InProgress, Some("Complex logic".into()));
+    tmap.record(
+        "parse_config",
+        Some("parse_config"),
+        TranslationStatus::Verified,
+        None,
+    );
+    tmap.record(
+        "validate_input",
+        Some("validate_input"),
+        TranslationStatus::Ported,
+        None,
+    );
+    tmap.record(
+        "process_request",
+        None,
+        TranslationStatus::InProgress,
+        Some("Complex logic".into()),
+    );
     tmap.record("send_response", None, TranslationStatus::NotStarted, None);
-    tmap.record("log_error", None, TranslationStatus::Skipped, Some("Using tracing instead".into()));
+    tmap.record(
+        "log_error",
+        None,
+        TranslationStatus::Skipped,
+        Some("Using tracing instead".into()),
+    );
 
     // Step 5: Check progress.
     let progress = tmap.progress();
@@ -143,7 +182,10 @@ fn test_migration_workflow_cpp_to_rust() {
     let cmp = mgr.compare(&ws, "parse_config").unwrap();
     assert!(cmp.contexts[0].found);
     assert!(cmp.contexts[1].found);
-    assert!(!cmp.structural_diff.is_empty(), "C++ and Rust signatures differ");
+    assert!(
+        !cmp.structural_diff.is_empty(),
+        "C++ and Rust signatures differ"
+    );
 }
 
 // ============================================================================
@@ -181,7 +223,11 @@ fn test_anti_hallucination_workflow() {
 
     // Mixed claim → Partial.
     match engine.ground_claim("process_request calls authenticate_user before handling") {
-        GroundingResult::Partial { supported, unsupported, .. } => {
+        GroundingResult::Partial {
+            supported,
+            unsupported,
+            ..
+        } => {
             assert!(supported.contains(&"process_request".to_string()));
             assert!(unsupported.contains(&"authenticate_user".to_string()));
         }
@@ -201,7 +247,13 @@ fn test_grounding_across_workspace_lifecycle() {
     // Start with partial Rust codebase.
     let rust_partial = rust_graph_partial();
     let _ctx = mgr
-        .add_context(&ws, "/src/rust", ContextRole::Target, Some("Rust".into()), rust_partial.clone())
+        .add_context(
+            &ws,
+            "/src/rust",
+            ContextRole::Target,
+            Some("Rust".into()),
+            rust_partial.clone(),
+        )
         .unwrap();
 
     // Ground against the partial target — parse_config exists.
@@ -215,7 +267,10 @@ fn test_grounding_across_workspace_lifecycle() {
     // send_response does NOT exist yet → Ungrounded.
     match engine.ground_claim("send_response handles HTTP responses") {
         GroundingResult::Ungrounded { .. } => {}
-        other => panic!("Expected Ungrounded for not-yet-ported function, got {:?}", other),
+        other => panic!(
+            "Expected Ungrounded for not-yet-ported function, got {:?}",
+            other
+        ),
     }
 
     // After completing migration, ground against complete graph.
@@ -239,7 +294,12 @@ fn test_grounding_across_workspace_lifecycle() {
 fn test_translation_update_existing() {
     let mut tmap = TranslationMap::new("src".into(), "tgt".into());
     tmap.record("foo", None, TranslationStatus::NotStarted, None);
-    tmap.record("foo", Some("foo_rs"), TranslationStatus::Ported, Some("Done".into()));
+    tmap.record(
+        "foo",
+        Some("foo_rs"),
+        TranslationStatus::Ported,
+        Some("Done".into()),
+    );
 
     let progress = tmap.progress();
     assert_eq!(progress.total, 1, "Should update, not duplicate");
@@ -265,7 +325,12 @@ fn test_translation_all_statuses() {
     tmap.record("s2", None, TranslationStatus::InProgress, None);
     tmap.record("s3", Some("t3"), TranslationStatus::Ported, None);
     tmap.record("s4", Some("t4"), TranslationStatus::Verified, None);
-    tmap.record("s5", None, TranslationStatus::Skipped, Some("Not needed".into()));
+    tmap.record(
+        "s5",
+        None,
+        TranslationStatus::Skipped,
+        Some("Not needed".into()),
+    );
 
     let p = tmap.progress();
     assert_eq!(p.total, 5);
@@ -284,12 +349,24 @@ fn test_translation_all_statuses() {
 
 #[test]
 fn test_translation_status_roundtrip() {
-    for label in &["not_started", "in_progress", "ported", "verified", "skipped"] {
+    for label in &[
+        "not_started",
+        "in_progress",
+        "ported",
+        "verified",
+        "skipped",
+    ] {
         let status = TranslationStatus::from_str(label).unwrap();
         assert_eq!(status.label(), *label);
     }
     // Hyphenated forms.
-    assert_eq!(TranslationStatus::from_str("not-started"), Some(TranslationStatus::NotStarted));
-    assert_eq!(TranslationStatus::from_str("in-progress"), Some(TranslationStatus::InProgress));
+    assert_eq!(
+        TranslationStatus::from_str("not-started"),
+        Some(TranslationStatus::NotStarted)
+    );
+    assert_eq!(
+        TranslationStatus::from_str("in-progress"),
+        Some(TranslationStatus::InProgress)
+    );
     assert!(TranslationStatus::from_str("invalid").is_none());
 }

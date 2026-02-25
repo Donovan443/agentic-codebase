@@ -88,9 +88,15 @@ fn test_workspace_add_multiple_contexts() {
     let g2 = make_graph(&[("bar", CodeUnitType::Function)]);
     let g3 = make_graph(&[("baz", CodeUnitType::Function)]);
 
-    let ctx1 = mgr.add_context(&ws, "/cpp", ContextRole::Source, Some("C++".into()), g1).unwrap();
-    let ctx2 = mgr.add_context(&ws, "/rust", ContextRole::Target, Some("Rust".into()), g2).unwrap();
-    let ctx3 = mgr.add_context(&ws, "/ref", ContextRole::Reference, None, g3).unwrap();
+    let ctx1 = mgr
+        .add_context(&ws, "/cpp", ContextRole::Source, Some("C++".into()), g1)
+        .unwrap();
+    let ctx2 = mgr
+        .add_context(&ws, "/rust", ContextRole::Target, Some("Rust".into()), g2)
+        .unwrap();
+    let ctx3 = mgr
+        .add_context(&ws, "/ref", ContextRole::Reference, None, g3)
+        .unwrap();
 
     assert_ne!(ctx1, ctx2);
     assert_ne!(ctx2, ctx3);
@@ -111,7 +117,13 @@ fn test_workspace_query_single() {
     let mut mgr = WorkspaceManager::new();
     let ws = mgr.create("q");
     let ctx = mgr
-        .add_context(&ws, "/a", ContextRole::Source, None, make_graph(&[("alpha", CodeUnitType::Function)]))
+        .add_context(
+            &ws,
+            "/a",
+            ContextRole::Source,
+            None,
+            make_graph(&[("alpha", CodeUnitType::Function)]),
+        )
         .unwrap();
 
     let matches = mgr.query_context(&ws, &ctx, "alph").unwrap();
@@ -124,7 +136,13 @@ fn test_workspace_query_single_no_match() {
     let mut mgr = WorkspaceManager::new();
     let ws = mgr.create("q");
     let ctx = mgr
-        .add_context(&ws, "/a", ContextRole::Source, None, make_graph(&[("alpha", CodeUnitType::Function)]))
+        .add_context(
+            &ws,
+            "/a",
+            ContextRole::Source,
+            None,
+            make_graph(&[("alpha", CodeUnitType::Function)]),
+        )
         .unwrap();
 
     let matches = mgr.query_context(&ws, &ctx, "omega").unwrap();
@@ -140,11 +158,19 @@ fn test_workspace_query_all() {
     let mut mgr = WorkspaceManager::new();
     let ws = mgr.create("multi");
 
-    let g1 = make_graph(&[("process", CodeUnitType::Function), ("handle", CodeUnitType::Function)]);
-    let g2 = make_graph(&[("process", CodeUnitType::Function), ("other", CodeUnitType::Function)]);
+    let g1 = make_graph(&[
+        ("process", CodeUnitType::Function),
+        ("handle", CodeUnitType::Function),
+    ]);
+    let g2 = make_graph(&[
+        ("process", CodeUnitType::Function),
+        ("other", CodeUnitType::Function),
+    ]);
 
-    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1).unwrap();
-    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2).unwrap();
+    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1)
+        .unwrap();
+    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2)
+        .unwrap();
 
     let results = mgr.query_all(&ws, "process").unwrap();
     assert_eq!(results.len(), 2, "Both contexts should have 'process'");
@@ -158,8 +184,10 @@ fn test_workspace_query_all_partial() {
     let g1 = make_graph(&[("unique_source_fn", CodeUnitType::Function)]);
     let g2 = make_graph(&[("common", CodeUnitType::Function)]);
 
-    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1).unwrap();
-    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2).unwrap();
+    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1)
+        .unwrap();
+    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2)
+        .unwrap();
 
     let results = mgr.query_all(&ws, "unique_source").unwrap();
     assert_eq!(results.len(), 1, "Only source context should match");
@@ -178,9 +206,12 @@ fn test_workspace_xref_all_contexts() {
     let g2 = make_graph(&[("shared_fn", CodeUnitType::Function)]);
     let g3 = make_graph(&[("shared_fn", CodeUnitType::Function)]);
 
-    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1).unwrap();
-    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2).unwrap();
-    mgr.add_context(&ws, "/c", ContextRole::Reference, None, g3).unwrap();
+    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1)
+        .unwrap();
+    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2)
+        .unwrap();
+    mgr.add_context(&ws, "/c", ContextRole::Reference, None, g3)
+        .unwrap();
 
     let xref = mgr.cross_reference(&ws, "shared_fn").unwrap();
     assert_eq!(xref.found_in.len(), 3);
@@ -195,8 +226,10 @@ fn test_workspace_xref_missing_from_target() {
     let g1 = make_graph(&[("source_only", CodeUnitType::Function)]);
     let g2 = make_graph(&[("other", CodeUnitType::Function)]);
 
-    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1).unwrap();
-    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2).unwrap();
+    mgr.add_context(&ws, "/a", ContextRole::Source, None, g1)
+        .unwrap();
+    mgr.add_context(&ws, "/b", ContextRole::Target, None, g2)
+        .unwrap();
 
     let xref = mgr.cross_reference(&ws, "source_only").unwrap();
     assert_eq!(xref.found_in.len(), 1);
@@ -213,16 +246,31 @@ fn test_workspace_compare_found_both() {
     let mut mgr = WorkspaceManager::new();
     let ws = mgr.create("cmp");
 
-    mgr.add_context(&ws, "/a", ContextRole::Source, None,
-        make_named_graph("process", Some("void process(int x)"), Language::Rust)).unwrap();
-    mgr.add_context(&ws, "/b", ContextRole::Target, None,
-        make_named_graph("process", Some("fn process(x: i32)"), Language::Rust)).unwrap();
+    mgr.add_context(
+        &ws,
+        "/a",
+        ContextRole::Source,
+        None,
+        make_named_graph("process", Some("void process(int x)"), Language::Rust),
+    )
+    .unwrap();
+    mgr.add_context(
+        &ws,
+        "/b",
+        ContextRole::Target,
+        None,
+        make_named_graph("process", Some("fn process(x: i32)"), Language::Rust),
+    )
+    .unwrap();
 
     let cmp = mgr.compare(&ws, "process").unwrap();
     assert_eq!(cmp.contexts.len(), 2);
     assert!(cmp.contexts[0].found);
     assert!(cmp.contexts[1].found);
-    assert!(!cmp.structural_diff.is_empty(), "Different signatures should produce structural diff");
+    assert!(
+        !cmp.structural_diff.is_empty(),
+        "Different signatures should produce structural diff"
+    );
 }
 
 #[test]
@@ -230,10 +278,22 @@ fn test_workspace_compare_found_source_only() {
     let mut mgr = WorkspaceManager::new();
     let ws = mgr.create("cmp2");
 
-    mgr.add_context(&ws, "/a", ContextRole::Source, None,
-        make_named_graph("legacy_fn", Some("int legacy_fn()"), Language::Rust)).unwrap();
-    mgr.add_context(&ws, "/b", ContextRole::Target, None,
-        make_graph(&[("other_fn", CodeUnitType::Function)])).unwrap();
+    mgr.add_context(
+        &ws,
+        "/a",
+        ContextRole::Source,
+        None,
+        make_named_graph("legacy_fn", Some("int legacy_fn()"), Language::Rust),
+    )
+    .unwrap();
+    mgr.add_context(
+        &ws,
+        "/b",
+        ContextRole::Target,
+        None,
+        make_graph(&[("other_fn", CodeUnitType::Function)]),
+    )
+    .unwrap();
 
     let cmp = mgr.compare(&ws, "legacy_fn").unwrap();
     assert!(cmp.contexts[0].found);
@@ -256,7 +316,8 @@ fn test_workspace_scale_5_contexts() {
             1 => ContextRole::Target,
             _ => ContextRole::Reference,
         };
-        mgr.add_context(&ws, &format!("/ctx{}", i), role, None, g).unwrap();
+        mgr.add_context(&ws, &format!("/ctx{}", i), role, None, g)
+            .unwrap();
     }
 
     let workspace = mgr.list(&ws).unwrap();
@@ -295,7 +356,14 @@ fn test_workspace_empty() {
 fn test_workspace_missing_context() {
     let mut mgr = WorkspaceManager::new();
     let ws = mgr.create("missing");
-    mgr.add_context(&ws, "/a", ContextRole::Source, None, make_graph(&[("x", CodeUnitType::Function)])).unwrap();
+    mgr.add_context(
+        &ws,
+        "/a",
+        ContextRole::Source,
+        None,
+        make_graph(&[("x", CodeUnitType::Function)]),
+    )
+    .unwrap();
 
     let err = mgr.query_context(&ws, "ctx-999", "x");
     assert!(err.is_err());

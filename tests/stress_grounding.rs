@@ -12,16 +12,76 @@ fn test_graph() -> CodeGraph {
     let mut graph = CodeGraph::with_default_dimension();
 
     let units = vec![
-        ("process_payment", CodeUnitType::Function, Language::Python, "payments.stripe.process_payment", "src/payments/stripe.py"),
-        ("CodeGraph", CodeUnitType::Type, Language::Rust, "crate::graph::CodeGraph", "src/graph/code_graph.rs"),
-        ("add_unit", CodeUnitType::Function, Language::Rust, "crate::graph::CodeGraph::add_unit", "src/graph/code_graph.rs"),
-        ("MAX_EDGES_PER_UNIT", CodeUnitType::Config, Language::Rust, "crate::types::MAX_EDGES_PER_UNIT", "src/types/mod.rs"),
-        ("validate_amount", CodeUnitType::Function, Language::Python, "payments.utils.validate_amount", "src/payments/utils.py"),
-        ("UserProfile", CodeUnitType::Type, Language::TypeScript, "models.UserProfile", "src/models/user.ts"),
-        ("parse_config", CodeUnitType::Function, Language::Rust, "crate::config::parse_config", "src/config/loader.rs"),
-        ("DatabaseConnection", CodeUnitType::Type, Language::Rust, "crate::db::DatabaseConnection", "src/db/connection.rs"),
-        ("run_migration", CodeUnitType::Function, Language::Rust, "crate::db::run_migration", "src/db/migration.rs"),
-        ("API_VERSION", CodeUnitType::Config, Language::Rust, "crate::API_VERSION", "src/lib.rs"),
+        (
+            "process_payment",
+            CodeUnitType::Function,
+            Language::Python,
+            "payments.stripe.process_payment",
+            "src/payments/stripe.py",
+        ),
+        (
+            "CodeGraph",
+            CodeUnitType::Type,
+            Language::Rust,
+            "crate::graph::CodeGraph",
+            "src/graph/code_graph.rs",
+        ),
+        (
+            "add_unit",
+            CodeUnitType::Function,
+            Language::Rust,
+            "crate::graph::CodeGraph::add_unit",
+            "src/graph/code_graph.rs",
+        ),
+        (
+            "MAX_EDGES_PER_UNIT",
+            CodeUnitType::Config,
+            Language::Rust,
+            "crate::types::MAX_EDGES_PER_UNIT",
+            "src/types/mod.rs",
+        ),
+        (
+            "validate_amount",
+            CodeUnitType::Function,
+            Language::Python,
+            "payments.utils.validate_amount",
+            "src/payments/utils.py",
+        ),
+        (
+            "UserProfile",
+            CodeUnitType::Type,
+            Language::TypeScript,
+            "models.UserProfile",
+            "src/models/user.ts",
+        ),
+        (
+            "parse_config",
+            CodeUnitType::Function,
+            Language::Rust,
+            "crate::config::parse_config",
+            "src/config/loader.rs",
+        ),
+        (
+            "DatabaseConnection",
+            CodeUnitType::Type,
+            Language::Rust,
+            "crate::db::DatabaseConnection",
+            "src/db/connection.rs",
+        ),
+        (
+            "run_migration",
+            CodeUnitType::Function,
+            Language::Rust,
+            "crate::db::run_migration",
+            "src/db/migration.rs",
+        ),
+        (
+            "API_VERSION",
+            CodeUnitType::Config,
+            Language::Rust,
+            "crate::API_VERSION",
+            "src/lib.rs",
+        ),
     ];
 
     for (name, utype, lang, qname, fpath) in units {
@@ -63,7 +123,10 @@ fn test_grounding_verified_function() {
     let graph = test_graph();
     let engine = GroundingEngine::new(&graph);
     match engine.ground_claim("The process_payment function handles Stripe payments") {
-        GroundingResult::Verified { evidence, confidence } => {
+        GroundingResult::Verified {
+            evidence,
+            confidence,
+        } => {
             assert!(!evidence.is_empty());
             assert!(confidence > 0.0);
             assert_eq!(evidence[0].name, "process_payment");
@@ -102,7 +165,10 @@ fn test_grounding_verified_multiple_refs() {
     let engine = GroundingEngine::new(&graph);
     match engine.ground_claim("add_unit works on the CodeGraph struct") {
         GroundingResult::Verified { evidence, .. } => {
-            assert!(evidence.len() >= 2, "Should find evidence for both add_unit and CodeGraph");
+            assert!(
+                evidence.len() >= 2,
+                "Should find evidence for both add_unit and CodeGraph"
+            );
         }
         other => panic!("Expected Verified, got {:?}", other),
     }
@@ -154,7 +220,11 @@ fn test_grounding_partial_mixed() {
     let graph = test_graph();
     let engine = GroundingEngine::new(&graph);
     match engine.ground_claim("process_payment calls send_notification after success") {
-        GroundingResult::Partial { supported, unsupported, .. } => {
+        GroundingResult::Partial {
+            supported,
+            unsupported,
+            ..
+        } => {
             assert!(supported.contains(&"process_payment".to_string()));
             assert!(unsupported.contains(&"send_notification".to_string()));
         }
@@ -167,7 +237,11 @@ fn test_grounding_partial_two_real_one_fake() {
     let graph = test_graph();
     let engine = GroundingEngine::new(&graph);
     match engine.ground_claim("CodeGraph uses add_unit and remove_unit methods") {
-        GroundingResult::Partial { supported, unsupported, .. } => {
+        GroundingResult::Partial {
+            supported,
+            unsupported,
+            ..
+        } => {
             assert!(supported.contains(&"CodeGraph".to_string()));
             assert!(supported.contains(&"add_unit".to_string()));
             assert!(unsupported.contains(&"remove_unit".to_string()));
@@ -233,7 +307,10 @@ fn test_grounding_scale_10k_symbols() {
         GroundingResult::Verified { evidence, .. } => {
             assert!(evidence.iter().any(|e| e.name == "function_5000"));
         }
-        other => panic!("Expected Verified for function_5000 in 10K graph, got {:?}", other),
+        other => panic!(
+            "Expected Verified for function_5000 in 10K graph, got {:?}",
+            other
+        ),
     }
 
     // Should be fast — under 100ms even for 10K symbols.

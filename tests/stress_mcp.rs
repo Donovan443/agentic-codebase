@@ -13,11 +13,36 @@ use agentic_codebase::types::{CodeUnit, CodeUnitType, Language, Span};
 fn build_test_graph() -> CodeGraph {
     let mut graph = CodeGraph::with_default_dimension();
     let symbols = vec![
-        ("process_payment", CodeUnitType::Function, "payments.stripe.process_payment", "src/payments/stripe.py"),
-        ("CodeGraph", CodeUnitType::Type, "crate::graph::CodeGraph", "src/graph/code_graph.rs"),
-        ("validate_input", CodeUnitType::Function, "crate::validate_input", "src/validation.rs"),
-        ("MAX_RETRIES", CodeUnitType::Config, "crate::MAX_RETRIES", "src/config.rs"),
-        ("UserProfile", CodeUnitType::Type, "crate::models::UserProfile", "src/models.rs"),
+        (
+            "process_payment",
+            CodeUnitType::Function,
+            "payments.stripe.process_payment",
+            "src/payments/stripe.py",
+        ),
+        (
+            "CodeGraph",
+            CodeUnitType::Type,
+            "crate::graph::CodeGraph",
+            "src/graph/code_graph.rs",
+        ),
+        (
+            "validate_input",
+            CodeUnitType::Function,
+            "crate::validate_input",
+            "src/validation.rs",
+        ),
+        (
+            "MAX_RETRIES",
+            CodeUnitType::Config,
+            "crate::MAX_RETRIES",
+            "src/config.rs",
+        ),
+        (
+            "UserProfile",
+            CodeUnitType::Type,
+            "crate::models::UserProfile",
+            "src/models.rs",
+        ),
     ];
     for (name, utype, qname, fpath) in symbols {
         let mut unit = CodeUnit::new(
@@ -42,7 +67,10 @@ fn create_server() -> McpServer {
 }
 
 fn init(server: &mut McpServer) {
-    call(server, &json!({"jsonrpc":"2.0","id":0,"method":"initialize","params":{}}));
+    call(
+        server,
+        &json!({"jsonrpc":"2.0","id":0,"method":"initialize","params":{}}),
+    );
 }
 
 fn call(server: &mut McpServer, request: &Value) -> Value {
@@ -134,11 +162,7 @@ fn test_mcp_codebase_ground_strict() {
 #[test]
 fn test_mcp_codebase_ground_missing_claim() {
     let mut server = create_server();
-    let resp = tool_call(
-        &mut server,
-        "codebase_ground",
-        json!({"graph": "test"}),
-    );
+    let resp = tool_call(&mut server, "codebase_ground", json!({"graph": "test"}));
     assert!(resp["error"].is_object(), "Should error without claim");
 }
 
@@ -197,7 +221,9 @@ fn test_mcp_codebase_suggest() {
     let parsed: Value = serde_json::from_str(&text).unwrap();
     let suggestions = parsed["suggestions"].as_array().unwrap();
     assert!(
-        suggestions.iter().any(|s| s.as_str() == Some("process_payment")),
+        suggestions
+            .iter()
+            .any(|s| s.as_str() == Some("process_payment")),
         "Should suggest process_payment for typo, got {:?}",
         suggestions
     );
@@ -238,11 +264,7 @@ fn test_mcp_workspace_create() {
 #[test]
 fn test_mcp_workspace_create_missing_name() {
     let mut server = create_server();
-    let resp = tool_call(
-        &mut server,
-        "workspace_create",
-        json!({}),
-    );
+    let resp = tool_call(&mut server, "workspace_create", json!({}));
     assert!(resp["error"].is_object());
 }
 
@@ -317,7 +339,11 @@ fn test_mcp_workspace_list() {
         parsed["workspace_id"].as_str().unwrap().to_string()
     };
 
-    tool_call(&mut server, "workspace_add", json!({"workspace": &ws_id, "graph": "test", "role": "source"}));
+    tool_call(
+        &mut server,
+        "workspace_add",
+        json!({"workspace": &ws_id, "graph": "test", "role": "source"}),
+    );
 
     let resp = tool_call(&mut server, "workspace_list", json!({"workspace": &ws_id}));
     let text = tool_text(&resp);
@@ -335,7 +361,11 @@ fn test_mcp_workspace_query() {
         let parsed: Value = serde_json::from_str(&text).unwrap();
         parsed["workspace_id"].as_str().unwrap().to_string()
     };
-    tool_call(&mut server, "workspace_add", json!({"workspace": &ws_id, "graph": "test", "role": "source"}));
+    tool_call(
+        &mut server,
+        "workspace_add",
+        json!({"workspace": &ws_id, "graph": "test", "role": "source"}),
+    );
 
     let resp = tool_call(
         &mut server,
@@ -372,8 +402,16 @@ fn test_mcp_workspace_compare() {
         let parsed: Value = serde_json::from_str(&text).unwrap();
         parsed["workspace_id"].as_str().unwrap().to_string()
     };
-    tool_call(&mut server, "workspace_add", json!({"workspace": &ws_id, "graph": "test", "role": "source"}));
-    tool_call(&mut server, "workspace_add", json!({"workspace": &ws_id, "graph": "target", "role": "target"}));
+    tool_call(
+        &mut server,
+        "workspace_add",
+        json!({"workspace": &ws_id, "graph": "test", "role": "source"}),
+    );
+    tool_call(
+        &mut server,
+        "workspace_add",
+        json!({"workspace": &ws_id, "graph": "target", "role": "target"}),
+    );
 
     let resp = tool_call(
         &mut server,
@@ -406,8 +444,16 @@ fn test_mcp_workspace_xref() {
         let parsed: Value = serde_json::from_str(&text).unwrap();
         parsed["workspace_id"].as_str().unwrap().to_string()
     };
-    tool_call(&mut server, "workspace_add", json!({"workspace": &ws_id, "graph": "test", "role": "source"}));
-    tool_call(&mut server, "workspace_add", json!({"workspace": &ws_id, "graph": "target", "role": "target"}));
+    tool_call(
+        &mut server,
+        "workspace_add",
+        json!({"workspace": &ws_id, "graph": "test", "role": "source"}),
+    );
+    tool_call(
+        &mut server,
+        "workspace_add",
+        json!({"workspace": &ws_id, "graph": "target", "role": "target"}),
+    );
 
     let resp = tool_call(
         &mut server,
@@ -480,11 +526,27 @@ fn test_mcp_translation_progress() {
     };
 
     // Record some translations.
-    tool_call(&mut server, "translation_record", json!({"workspace": &ws_id, "source_symbol": "a", "status": "ported"}));
-    tool_call(&mut server, "translation_record", json!({"workspace": &ws_id, "source_symbol": "b", "status": "not_started"}));
-    tool_call(&mut server, "translation_record", json!({"workspace": &ws_id, "source_symbol": "c", "status": "verified"}));
+    tool_call(
+        &mut server,
+        "translation_record",
+        json!({"workspace": &ws_id, "source_symbol": "a", "status": "ported"}),
+    );
+    tool_call(
+        &mut server,
+        "translation_record",
+        json!({"workspace": &ws_id, "source_symbol": "b", "status": "not_started"}),
+    );
+    tool_call(
+        &mut server,
+        "translation_record",
+        json!({"workspace": &ws_id, "source_symbol": "c", "status": "verified"}),
+    );
 
-    let resp = tool_call(&mut server, "translation_progress", json!({"workspace": &ws_id}));
+    let resp = tool_call(
+        &mut server,
+        "translation_progress",
+        json!({"workspace": &ws_id}),
+    );
     let text = tool_text(&resp);
     let parsed: Value = serde_json::from_str(&text).unwrap();
     assert_eq!(parsed["total"], 3);
@@ -503,7 +565,11 @@ fn test_mcp_translation_progress_empty() {
         parsed["workspace_id"].as_str().unwrap().to_string()
     };
 
-    let resp = tool_call(&mut server, "translation_progress", json!({"workspace": &ws_id}));
+    let resp = tool_call(
+        &mut server,
+        "translation_progress",
+        json!({"workspace": &ws_id}),
+    );
     let text = tool_text(&resp);
     let parsed: Value = serde_json::from_str(&text).unwrap();
     assert_eq!(parsed["total"], 0);
@@ -519,16 +585,35 @@ fn test_mcp_translation_remaining() {
         parsed["workspace_id"].as_str().unwrap().to_string()
     };
 
-    tool_call(&mut server, "translation_record", json!({"workspace": &ws_id, "source_symbol": "done_fn", "status": "ported"}));
-    tool_call(&mut server, "translation_record", json!({"workspace": &ws_id, "source_symbol": "todo_fn", "status": "not_started"}));
-    tool_call(&mut server, "translation_record", json!({"workspace": &ws_id, "source_symbol": "wip_fn", "status": "in_progress"}));
+    tool_call(
+        &mut server,
+        "translation_record",
+        json!({"workspace": &ws_id, "source_symbol": "done_fn", "status": "ported"}),
+    );
+    tool_call(
+        &mut server,
+        "translation_record",
+        json!({"workspace": &ws_id, "source_symbol": "todo_fn", "status": "not_started"}),
+    );
+    tool_call(
+        &mut server,
+        "translation_record",
+        json!({"workspace": &ws_id, "source_symbol": "wip_fn", "status": "in_progress"}),
+    );
 
-    let resp = tool_call(&mut server, "translation_remaining", json!({"workspace": &ws_id}));
+    let resp = tool_call(
+        &mut server,
+        "translation_remaining",
+        json!({"workspace": &ws_id}),
+    );
     let text = tool_text(&resp);
     let parsed: Value = serde_json::from_str(&text).unwrap();
     assert_eq!(parsed["remaining_count"], 2);
     let remaining = parsed["remaining"].as_array().unwrap();
-    let names: Vec<&str> = remaining.iter().map(|r| r["source_symbol"].as_str().unwrap()).collect();
+    let names: Vec<&str> = remaining
+        .iter()
+        .map(|r| r["source_symbol"].as_str().unwrap())
+        .collect();
     assert!(names.contains(&"todo_fn"));
     assert!(names.contains(&"wip_fn"));
 }
