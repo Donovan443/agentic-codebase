@@ -116,7 +116,7 @@ fn test_mcp_codebase_ground_verified() {
     let text = tool_text(&resp);
     let parsed: Value = serde_json::from_str(&text).unwrap();
     assert_eq!(parsed["status"], "verified");
-    assert!(parsed["evidence"].as_array().unwrap().len() > 0);
+    assert!(!parsed["evidence"].as_array().unwrap().is_empty());
 }
 
 #[test]
@@ -376,7 +376,7 @@ fn test_mcp_workspace_query() {
     let parsed: Value = serde_json::from_str(&text).unwrap();
     let results = parsed.as_array().unwrap();
     assert!(!results.is_empty());
-    assert!(results[0]["matches"].as_array().unwrap().len() > 0);
+    assert!(!results[0]["matches"].as_array().unwrap().is_empty());
 }
 
 #[test]
