@@ -131,8 +131,9 @@ fn run_stdio(graph_path: Option<&str>, graph_name: Option<String>) {
                 server.load_graph(name, graph);
             }
             Err(e) => {
-                eprintln!("Error: Failed to load graph: {e}");
-                std::process::exit(1);
+                // Don't exit — set deferred path for lazy retry on first tool call.
+                tracing::warn!("Eager graph load failed ({e}), deferring to lazy load");
+                server.set_deferred_graph(name, graph_path.to_string());
             }
         }
     }

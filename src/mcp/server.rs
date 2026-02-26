@@ -5,11 +5,13 @@
 //! with no async runtime required.
 
 use std::collections::HashMap;
+use std::path::Path;
 
 use serde_json::{json, Value};
 
 use crate::engine::query::{ImpactParams, MatchMode, SymbolLookupParams};
 use crate::engine::QueryEngine;
+use crate::format::reader::AcbReader;
 use crate::graph::CodeGraph;
 use crate::grounding::{Grounded, GroundingEngine, GroundingResult};
 use crate::types::{CodeUnitType, EdgeType};
@@ -53,6 +55,8 @@ pub struct McpServer {
     workspace_manager: WorkspaceManager,
     /// Translation maps keyed by workspace ID.
     translation_maps: HashMap<String, TranslationMap>,
+    /// Deferred graph path for lazy loading on first tool call.
+    deferred_graph: Option<(String, String)>,
 }
 
 impl McpServer {
@@ -85,12 +89,38 @@ impl McpServer {
             session_start_time: None,
             workspace_manager: WorkspaceManager::new(),
             translation_maps: HashMap::new(),
+            deferred_graph: None,
         }
     }
 
     /// Load a code graph into the server under the given name.
     pub fn load_graph(&mut self, name: String, graph: CodeGraph) {
         self.graphs.insert(name, graph);
+    }
+
+    /// Set a deferred graph path for lazy loading.
+    ///
+    /// If no graphs are loaded when a tool is called, the server will
+    /// attempt to load this graph automatically. This provides a safety
+    /// net when startup auto-resolve fails (e.g. wrong CWD).
+    pub fn set_deferred_graph(&mut self, name: String, path: String) {
+        self.deferred_graph = Some((name, path));
+    }
+
+    /// Attempt to lazy-load the deferred graph. Called automatically
+    /// before tool dispatch when no graphs are loaded.
+    fn try_lazy_load(&mut self) {
+        if let Some((name, path)) = self.deferred_graph.take() {
+            match AcbReader::read_from_file(Path::new(&path)) {
+                Ok(graph) => {
+                    self.graphs.insert(name, graph);
+                }
+                Err(_) => {
+                    // Re-store the deferred path so we don't lose it
+                    self.deferred_graph = Some((name, path));
+                }
+            }
+        }
     }
 
     /// Remove a loaded code graph.
@@ -448,6 +478,11 @@ impl McpServer {
 
     /// Handle "tools/call".
     fn handle_tools_call(&mut self, id: Value, params: &Value) -> JsonRpcResponse {
+        // Lazy auto-load: if no graphs are loaded, try the deferred path.
+        if self.graphs.is_empty() {
+            self.try_lazy_load();
+        }
+
         let tool_name = match params.get("name").and_then(|v| v.as_str()) {
             Some(name) => name,
             None => {
