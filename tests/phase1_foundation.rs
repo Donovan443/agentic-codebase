@@ -119,6 +119,11 @@ fn test_language_detection_all() {
     assert_eq!(Language::from_extension("mjs"), Language::JavaScript);
     assert_eq!(Language::from_extension("cjs"), Language::JavaScript);
     assert_eq!(Language::from_extension("go"), Language::Go);
+    assert_eq!(Language::from_extension("cpp"), Language::Cpp);
+    assert_eq!(Language::from_extension("cc"), Language::Cpp);
+    assert_eq!(Language::from_extension("cxx"), Language::Cpp);
+    assert_eq!(Language::from_extension("hpp"), Language::Cpp);
+    assert_eq!(Language::from_extension("h"), Language::Cpp);
     assert_eq!(Language::from_extension("unknown"), Language::Unknown);
 }
 
@@ -145,8 +150,9 @@ fn test_language_from_u8_roundtrip() {
     assert_eq!(Language::from_u8(2), Some(Language::TypeScript));
     assert_eq!(Language::from_u8(3), Some(Language::JavaScript));
     assert_eq!(Language::from_u8(4), Some(Language::Go));
+    assert_eq!(Language::from_u8(5), Some(Language::Cpp));
     assert_eq!(Language::from_u8(255), Some(Language::Unknown));
-    assert_eq!(Language::from_u8(5), None);
+    assert_eq!(Language::from_u8(6), None);
     assert_eq!(Language::from_u8(100), None);
 }
 

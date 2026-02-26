@@ -17,6 +17,8 @@ pub enum Language {
     JavaScript = 3,
     /// Go (.go)
     Go = 4,
+    /// C++ (.cpp, .cc, .cxx, .h, .hpp, .hxx)
+    Cpp = 5,
     /// Unknown or unsupported language
     Unknown = 255,
 }
@@ -30,6 +32,7 @@ impl Language {
             2 => Some(Self::TypeScript),
             3 => Some(Self::JavaScript),
             4 => Some(Self::Go),
+            5 => Some(Self::Cpp),
             255 => Some(Self::Unknown),
             _ => None,
         }
@@ -43,6 +46,7 @@ impl Language {
             "ts" | "tsx" => Self::TypeScript,
             "js" | "jsx" | "mjs" | "cjs" => Self::JavaScript,
             "go" => Self::Go,
+            "cpp" | "cc" | "cxx" | "c++" | "h" | "hpp" | "hxx" | "hh" => Self::Cpp,
             _ => Self::Unknown,
         }
     }
@@ -63,6 +67,7 @@ impl Language {
             Self::TypeScript => Some(tree_sitter_typescript::language_typescript()),
             Self::JavaScript => Some(tree_sitter_javascript::language()),
             Self::Go => Some(tree_sitter_go::language()),
+            Self::Cpp => Some(tree_sitter_cpp::language()),
             Self::Unknown => None,
         }
     }
@@ -75,6 +80,7 @@ impl Language {
             Self::TypeScript => "TypeScript",
             Self::JavaScript => "JavaScript",
             Self::Go => "Go",
+            Self::Cpp => "C++",
             Self::Unknown => "Unknown",
         }
     }

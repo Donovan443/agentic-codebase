@@ -10,6 +10,7 @@ use std::time::Instant;
 
 use crate::types::{AcbError, AcbResult, Language};
 
+use super::cpp::CppParser;
 use super::go::GoParser;
 use super::python::PythonParser;
 use super::rust::RustParser;
@@ -134,6 +135,7 @@ impl Parser {
         parsers.insert(Language::TypeScript, Box::new(TypeScriptParser::new()));
         parsers.insert(Language::JavaScript, Box::new(TypeScriptParser::new()));
         parsers.insert(Language::Go, Box::new(GoParser::new()));
+        parsers.insert(Language::Cpp, Box::new(CppParser::new()));
         Self { parsers }
     }
 

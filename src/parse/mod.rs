@@ -3,6 +3,7 @@
 //! Converts source code into raw syntax information. One module per language.
 //! No semantic analysis here — just syntax extraction.
 
+pub mod cpp;
 pub mod go;
 pub mod parser;
 pub mod python;

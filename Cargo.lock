@@ -10,7 +10,7 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "agentic-codebase"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "axum",
  "blake3",
@@ -36,6 +36,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tree-sitter",
+ "tree-sitter-cpp",
  "tree-sitter-go",
  "tree-sitter-javascript",
  "tree-sitter-python",
@@ -46,7 +47,7 @@ dependencies = [
 
 [[package]]
 name = "agentic-codebase-cli"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "agentic-codebase",
  "clap",
@@ -55,7 +56,7 @@ dependencies = [
 
 [[package]]
 name = "agentic-codebase-ffi"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "agentic-codebase",
  "pyo3",
@@ -65,7 +66,7 @@ dependencies = [
 
 [[package]]
 name = "agentic-codebase-mcp"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "agentic-codebase",
  "axum",
@@ -2961,6 +2962,16 @@ checksum = "df7cc499ceadd4dcdf7ec6d4cbc34ece92c3fa07821e287aedecd4416c516dca"
 dependencies = [
  "cc",
  "regex",
+]
+
+[[package]]
+name = "tree-sitter-cpp"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e058d4b9cefb54a8f322b31a1bd3cd306919b70b729523473b5aad8d315a8897"
+dependencies = [
+ "cc",
+ "tree-sitter",
 ]
 
 [[package]]
