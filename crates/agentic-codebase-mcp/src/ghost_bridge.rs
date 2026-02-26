@@ -68,13 +68,23 @@ fn build_codebase_context(server: &agentic_codebase::mcp::McpServer) -> String {
     md.push_str("# AgenticCodebase Context\n\n");
     md.push_str(&format!("> Auto-synced by Ghost Writer at {now}\n\n"));
 
-    // Loaded graphs
+    // Loaded graphs with stats
     if graph_names.is_empty() {
         md.push_str("**Graphs:** _none loaded_\n\n");
     } else {
         md.push_str("## Loaded Graphs\n\n");
+        md.push_str("| Graph | Units | Edges |\n");
+        md.push_str("|-------|-------|-------|\n");
         for name in &graph_names {
-            md.push_str(&format!("- `{name}`\n"));
+            if let Some(graph) = server.get_graph(name) {
+                md.push_str(&format!(
+                    "| `{name}` | {} | {} |\n",
+                    graph.unit_count(),
+                    graph.edge_count()
+                ));
+            } else {
+                md.push_str(&format!("| `{name}` | _loading..._ | |\n"));
+            }
         }
         md.push('\n');
     }
