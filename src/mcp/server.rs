@@ -683,7 +683,10 @@ impl McpServer {
             if let Some((name, graph)) = self.graphs.iter().next() {
                 return Ok((name.as_str(), graph));
             }
-            return Err(JsonRpcError::invalid_params("No graphs loaded"));
+            return Err(JsonRpcError::invalid_params(
+                "No graphs loaded. Start the MCP server with --graph <path.acb>, \
+                 or set AGENTRA_WORKSPACE_ROOT to a repository for auto-compilation.",
+            ));
         }
 
         self.graphs
