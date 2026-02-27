@@ -165,8 +165,7 @@ fn test_mcp_codebase_ground_missing_claim() {
     let resp = tool_call(&mut server, "codebase_ground", json!({"graph": "test"}));
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        resp.get("result").is_some()
-            && resp["result"].get("isError") == Some(&json!(true)),
+        resp.get("result").is_some() && resp["result"].get("isError") == Some(&json!(true)),
         "Missing claim should return tool error with isError: true, got: {resp}"
     );
 }

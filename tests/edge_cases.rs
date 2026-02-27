@@ -360,8 +360,7 @@ fn edge_symbol_lookup_invalid_mode() {
     );
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "Invalid mode should return tool error with isError: true, got: {response}"
     );
 }
@@ -400,8 +399,7 @@ fn edge_impact_analysis_very_large_unit_id() {
     );
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "Very large unit_id should return tool error with isError: true, got: {response}"
     );
 }
@@ -440,8 +438,7 @@ fn edge_impact_analysis_negative_depth() {
     );
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "Negative depth should return tool error with isError: true, got: {response}"
     );
 }
@@ -606,8 +603,7 @@ fn edge_query_wrong_graph_name() {
     );
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "Wrong graph name should return tool error with isError: true, got: {response}"
     );
 }
@@ -772,8 +768,7 @@ fn edge_interleaved_operations() {
     );
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        r3.get("result").is_some()
-            && r3["result"].get("isError") == Some(&json!(true)),
+        r3.get("result").is_some() && r3["result"].get("isError") == Some(&json!(true)),
         "Unloaded graph should return tool error with isError: true, got: {r3}"
     );
 
@@ -827,8 +822,7 @@ fn edge_full_lifecycle() {
     );
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        r.get("result").is_some()
-            && r["result"].get("isError") == Some(&json!(true)),
+        r.get("result").is_some() && r["result"].get("isError") == Some(&json!(true)),
         "Query without graphs should return tool error with isError: true, got: {r}"
     );
 
@@ -875,8 +869,7 @@ fn edge_full_lifecycle() {
     );
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        r.get("result").is_some()
-            && r["result"].get("isError") == Some(&json!(true)),
+        r.get("result").is_some() && r["result"].get("isError") == Some(&json!(true)),
         "Query after unload should return tool error with isError: true, got: {r}"
     );
 

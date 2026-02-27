@@ -394,8 +394,7 @@ fn test_mcp_tool_list_units_with_invalid_type_filter() {
 
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "Invalid type filter should return tool error with isError: true, got: {response}"
     );
 }
@@ -686,8 +685,7 @@ fn test_mcp_no_graphs_loaded() {
 
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "No graphs loaded should return tool error with isError: true, got: {response}"
     );
 }
@@ -735,8 +733,7 @@ fn test_mcp_impact_analysis_invalid_unit() {
 
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "Invalid unit should return tool error with isError: true, got: {response}"
     );
 }
@@ -761,8 +758,7 @@ fn test_mcp_symbol_lookup_missing_name_arg() {
 
     // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
     assert!(
-        response.get("result").is_some()
-            && response["result"].get("isError") == Some(&json!(true)),
+        response.get("result").is_some() && response["result"].get("isError") == Some(&json!(true)),
         "Missing name arg should return tool error with isError: true, got: {response}"
     );
 }
