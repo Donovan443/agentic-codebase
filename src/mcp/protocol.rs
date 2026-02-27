@@ -83,6 +83,15 @@ impl JsonRpcError {
         }
     }
 
+    /// MCP error: Tool not found (-32803).
+    pub fn tool_not_found(tool: impl Into<String>) -> Self {
+        Self {
+            code: -32803,
+            message: "Tool not found".to_string(),
+            data: Some(Value::String(tool.into())),
+        }
+    }
+
     /// Standard error: Invalid params (-32602).
     pub fn invalid_params(detail: impl Into<String>) -> Self {
         Self {
@@ -135,6 +144,42 @@ impl JsonRpcResponse {
             id,
             result: None,
             error: Some(error),
+        }
+    }
+
+    /// Create a tool error response (isError: true per MCP spec).
+    /// Use this for tool execution failures instead of `error()`.
+    pub fn tool_error(id: Value, message: impl Into<String>) -> Self {
+        Self::success(
+            id,
+            serde_json::json!({
+                "content": [{"type": "text", "text": message.into()}],
+                "isError": true
+            }),
+        )
+    }
+
+    /// If this is a JSON-RPC error response, convert it to a tool error
+    /// (isError: true) per MCP spec. Protocol errors pass through unchanged.
+    pub fn into_tool_error_if_needed(self) -> Self {
+        if let Some(ref err) = self.error {
+            // Only convert tool execution errors, not protocol-level errors.
+            // Protocol errors: parse (-32700), invalid request (-32600),
+            // method not found (-32601), tool not found (-32803).
+            match err.code {
+                -32700 | -32600 | -32601 | -32803 => self, // keep as JSON-RPC error
+                _ => {
+                    // Convert to isError: true
+                    let msg = if let Some(ref data) = err.data {
+                        format!("{}: {}", err.message, data)
+                    } else {
+                        err.message.clone()
+                    };
+                    Self::tool_error(self.id.clone(), msg)
+                }
+            }
+        } else {
+            self
         }
     }
 }

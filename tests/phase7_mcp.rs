@@ -392,8 +392,12 @@ fn test_mcp_tool_list_units_with_invalid_type_filter() {
         }),
     );
 
-    assert!(response.get("error").is_some());
-    assert_eq!(response["error"]["code"], -32602);
+    // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
+    assert!(
+        response.get("result").is_some()
+            && response["result"].get("isError") == Some(&json!(true)),
+        "Invalid type filter should return tool error with isError: true, got: {response}"
+    );
 }
 
 #[test]
@@ -468,7 +472,8 @@ fn test_mcp_tool_unknown() {
     );
 
     assert!(response.get("error").is_some());
-    assert_eq!(response["error"]["code"], -32601);
+    // Per MCP spec, unknown tools should return TOOL_NOT_FOUND (-32803)
+    assert_eq!(response["error"]["code"], -32803);
 }
 
 #[test]
@@ -679,8 +684,12 @@ fn test_mcp_no_graphs_loaded() {
         }),
     );
 
-    assert!(response.get("error").is_some());
-    assert_eq!(response["error"]["code"], -32602);
+    // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
+    assert!(
+        response.get("result").is_some()
+            && response["result"].get("isError") == Some(&json!(true)),
+        "No graphs loaded should return tool error with isError: true, got: {response}"
+    );
 }
 
 #[test]
@@ -724,8 +733,12 @@ fn test_mcp_impact_analysis_invalid_unit() {
         }),
     );
 
-    assert!(response.get("error").is_some());
-    assert_eq!(response["error"]["code"], -32603);
+    // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
+    assert!(
+        response.get("result").is_some()
+            && response["result"].get("isError") == Some(&json!(true)),
+        "Invalid unit should return tool error with isError: true, got: {response}"
+    );
 }
 
 #[test]
@@ -746,6 +759,10 @@ fn test_mcp_symbol_lookup_missing_name_arg() {
         }),
     );
 
-    assert!(response.get("error").is_some());
-    assert_eq!(response["error"]["code"], -32602);
+    // Per MCP spec: tool was found and invoked, so execution errors use isError: true.
+    assert!(
+        response.get("result").is_some()
+            && response["result"].get("isError") == Some(&json!(true)),
+        "Missing name arg should return tool error with isError: true, got: {response}"
+    );
 }

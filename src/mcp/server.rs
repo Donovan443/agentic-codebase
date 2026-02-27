@@ -233,7 +233,7 @@ impl McpServer {
                 "tools": [
                     {
                         "name": "symbol_lookup",
-                        "description": "Look up symbols by name in the code graph.",
+                        "description": "Look up symbols by name in the code graph",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -247,7 +247,7 @@ impl McpServer {
                     },
                     {
                         "name": "impact_analysis",
-                        "description": "Analyse the impact of changing a code unit.",
+                        "description": "Analyse the impact of changing a code unit",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -260,7 +260,7 @@ impl McpServer {
                     },
                     {
                         "name": "graph_stats",
-                        "description": "Get summary statistics about a loaded code graph.",
+                        "description": "Get summary statistics about a loaded code graph",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -270,7 +270,7 @@ impl McpServer {
                     },
                     {
                         "name": "list_units",
-                        "description": "List code units in a graph, optionally filtered by type.",
+                        "description": "List code units in a graph, optionally filtered by type",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -289,7 +289,7 @@ impl McpServer {
                     },
                     {
                         "name": "analysis_log",
-                        "description": "Log the intent and context behind a code analysis. Call this to record WHY you are performing a lookup or analysis.",
+                        "description": "Log the intent and context behind a code analysis. Call this to record WHY you are performing a lookup or analysis",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -316,7 +316,7 @@ impl McpServer {
                     // ── Grounding tools ──────────────────────────────────
                     {
                         "name": "codebase_ground",
-                        "description": "Verify a claim about code has graph evidence. Use before asserting code exists.",
+                        "description": "Verify a claim about code has graph evidence. Use before asserting code exists",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -329,7 +329,7 @@ impl McpServer {
                     },
                     {
                         "name": "codebase_evidence",
-                        "description": "Get graph evidence for a symbol name.",
+                        "description": "Get graph evidence for a symbol name",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -346,7 +346,7 @@ impl McpServer {
                     },
                     {
                         "name": "codebase_suggest",
-                        "description": "Find symbols similar to a name (for corrections).",
+                        "description": "Find symbols similar to a name (for corrections)",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -360,7 +360,7 @@ impl McpServer {
                     // ── Workspace tools ──────────────────────────────────
                     {
                         "name": "workspace_create",
-                        "description": "Create a workspace to load multiple codebases.",
+                        "description": "Create a workspace to load multiple codebases",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -371,7 +371,7 @@ impl McpServer {
                     },
                     {
                         "name": "workspace_add",
-                        "description": "Add a codebase to an existing workspace.",
+                        "description": "Add a codebase to an existing workspace",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -386,7 +386,7 @@ impl McpServer {
                     },
                     {
                         "name": "workspace_list",
-                        "description": "List all contexts in a workspace.",
+                        "description": "List all contexts in a workspace",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -397,7 +397,7 @@ impl McpServer {
                     },
                     {
                         "name": "workspace_query",
-                        "description": "Search across all codebases in workspace.",
+                        "description": "Search across all codebases in workspace",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -410,7 +410,7 @@ impl McpServer {
                     },
                     {
                         "name": "workspace_compare",
-                        "description": "Compare a symbol between source and target.",
+                        "description": "Compare a symbol between source and target",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -422,7 +422,7 @@ impl McpServer {
                     },
                     {
                         "name": "workspace_xref",
-                        "description": "Find where symbol exists/doesn't exist across contexts.",
+                        "description": "Find where symbol exists/doesn't exist across contexts",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -435,7 +435,7 @@ impl McpServer {
                     // ── Translation tools ────────────────────────────────
                     {
                         "name": "translation_record",
-                        "description": "Record source→target symbol mapping.",
+                        "description": "Record source→target symbol mapping",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -450,7 +450,7 @@ impl McpServer {
                     },
                     {
                         "name": "translation_progress",
-                        "description": "Get migration progress statistics.",
+                        "description": "Get migration progress statistics",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -461,7 +461,7 @@ impl McpServer {
                     },
                     {
                         "name": "translation_remaining",
-                        "description": "List symbols not yet ported.",
+                        "description": "List symbols not yet ported",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -470,7 +470,384 @@ impl McpServer {
                             },
                             "required": ["workspace"]
                         }
-                    }
+                    },
+                    // ── Invention 1: Enhanced Impact Analysis ────────────
+                    {
+                        "name": "impact_analyze",
+                        "description": "Analyze the full impact of a proposed code change with blast radius and risk assessment",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Target code unit ID" },
+                                "change_type": { "type": "string", "enum": ["signature", "behavior", "deletion", "rename", "move"], "default": "behavior" },
+                                "max_depth": { "type": "integer", "minimum": 1, "default": 5 }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    {
+                        "name": "impact_path",
+                        "description": "Find the impact path between two code units",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "from": { "type": "integer", "description": "Source unit ID" },
+                                "to": { "type": "integer", "description": "Target unit ID" }
+                            },
+                            "required": ["from", "to"]
+                        }
+                    },
+                    // ── Invention 2: Enhanced Code Prophecy ──────────────
+                    {
+                        "name": "prophecy",
+                        "description": "Predict the future of a code unit based on history, complexity, and dependencies",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Code unit ID to predict" }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    {
+                        "name": "prophecy_if",
+                        "description": "What-if scenario: predict impact of a hypothetical change",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Code unit ID" },
+                                "change_type": { "type": "string", "enum": ["signature", "behavior", "deletion", "rename", "move"], "default": "behavior" }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    // ── Invention 3: Regression Oracle ───────────────────
+                    {
+                        "name": "regression_predict",
+                        "description": "Predict which tests are most likely affected by a change",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Changed code unit ID" },
+                                "max_depth": { "type": "integer", "minimum": 1, "default": 5 }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    {
+                        "name": "regression_minimal",
+                        "description": "Get the minimal test set needed for a change",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Changed code unit ID" },
+                                "threshold": { "type": "number", "description": "Minimum probability threshold (0.0-1.0)", "default": 0.5 }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    // ── Invention 4: Citation Engine ─────────────────────
+                    {
+                        "name": "codebase_ground_claim",
+                        "description": "Ground a claim with full citations including file locations and code snippets",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "claim": { "type": "string", "description": "The claim to verify and cite" }
+                            },
+                            "required": ["claim"]
+                        }
+                    },
+                    {
+                        "name": "codebase_cite",
+                        "description": "Get a citation for a specific code unit",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Code unit ID to cite" }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    // ── Invention 5: Hallucination Detector ──────────────
+                    {
+                        "name": "hallucination_check",
+                        "description": "Check AI-generated output for hallucinations about code",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "output": { "type": "string", "description": "AI-generated text to check" }
+                            },
+                            "required": ["output"]
+                        }
+                    },
+                    // ── Invention 6: Truth Maintenance ───────────────────
+                    {
+                        "name": "truth_register",
+                        "description": "Register a truth claim for ongoing maintenance",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "claim": { "type": "string", "description": "The truth claim to maintain" }
+                            },
+                            "required": ["claim"]
+                        }
+                    },
+                    {
+                        "name": "truth_check",
+                        "description": "Check if a registered truth is still valid",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "claim": { "type": "string", "description": "The truth claim to check" }
+                            },
+                            "required": ["claim"]
+                        }
+                    },
+                    // ── Invention 7: Concept Navigation ──────────────────
+                    {
+                        "name": "concept_find",
+                        "description": "Find code implementing a concept (e.g., authentication, payment)",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "concept": { "type": "string", "description": "Concept to find (e.g., 'authentication', 'payment')" }
+                            },
+                            "required": ["concept"]
+                        }
+                    },
+                    {
+                        "name": "concept_map",
+                        "description": "Map all detected concepts in the codebase",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" }
+                            }
+                        }
+                    },
+                    {
+                        "name": "concept_explain",
+                        "description": "Explain how a concept is implemented with details",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "concept": { "type": "string", "description": "Concept to explain" }
+                            },
+                            "required": ["concept"]
+                        }
+                    },
+                    // ── Invention 8: Architecture Inference ──────────────
+                    {
+                        "name": "architecture_infer",
+                        "description": "Infer the architecture pattern of the codebase",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" }
+                            }
+                        }
+                    },
+                    {
+                        "name": "architecture_validate",
+                        "description": "Validate the codebase against its inferred architecture",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" }
+                            }
+                        }
+                    },
+                    // ── Invention 9: Semantic Search ─────────────────────
+                    {
+                        "name": "search_semantic",
+                        "description": "Natural-language semantic search across the codebase",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "query": { "type": "string", "description": "Natural-language search query" },
+                                "top_k": { "type": "integer", "minimum": 1, "default": 10 }
+                            },
+                            "required": ["query"]
+                        }
+                    },
+                    {
+                        "name": "search_similar",
+                        "description": "Find code units similar to a given unit",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Unit ID to find similar units for" },
+                                "top_k": { "type": "integer", "minimum": 1, "default": 10 }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    {
+                        "name": "search_explain",
+                        "description": "Explain why a unit matched a search query",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Unit ID" },
+                                "query": { "type": "string", "description": "The search query" }
+                            },
+                            "required": ["unit_id", "query"]
+                        }
+                    },
+                    // ── Invention 10: Multi-Codebase Compare ─────────────
+                    {
+                        "name": "compare_codebases",
+                        "description": "Full structural, conceptual, and pattern comparison between two codebases in a workspace",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "workspace": { "type": "string", "description": "Workspace name or id" }
+                            },
+                            "required": ["workspace"]
+                        }
+                    },
+                    {
+                        "name": "compare_concept",
+                        "description": "Compare how a concept is implemented across two codebases",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "workspace": { "type": "string", "description": "Workspace name or id" },
+                                "concept": { "type": "string", "description": "Concept to compare (e.g., 'authentication')" }
+                            },
+                            "required": ["workspace", "concept"]
+                        }
+                    },
+                    {
+                        "name": "compare_migrate",
+                        "description": "Generate a migration plan from source to target codebase",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "workspace": { "type": "string", "description": "Workspace name or id" }
+                            },
+                            "required": ["workspace"]
+                        }
+                    },
+                    // ── Invention 11: Version Archaeology ────────────────
+                    {
+                        "name": "archaeology_node",
+                        "description": "Investigate the full history and evolution of a code unit",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Code unit ID to investigate" }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    {
+                        "name": "archaeology_why",
+                        "description": "Explain why code looks the way it does based on its history",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Code unit ID" }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    {
+                        "name": "archaeology_when",
+                        "description": "Get the timeline of changes for a code unit",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Code unit ID" }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    // ── Invention 12: Pattern Extraction ─────────────────
+                    {
+                        "name": "pattern_extract",
+                        "description": "Extract all detected patterns from the codebase",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" }
+                            }
+                        }
+                    },
+                    {
+                        "name": "pattern_check",
+                        "description": "Check a code unit against detected patterns for violations",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "unit_id": { "type": "integer", "description": "Code unit ID to check" }
+                            },
+                            "required": ["unit_id"]
+                        }
+                    },
+                    {
+                        "name": "pattern_suggest",
+                        "description": "Suggest patterns for new code based on file location",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "graph": { "type": "string", "description": "Graph name" },
+                                "file_path": { "type": "string", "description": "File path for pattern suggestions" }
+                            },
+                            "required": ["file_path"]
+                        }
+                    },
+                    // -- Invention 13: Code Resurrection --------------------
+                    { "name": "resurrect_search", "description": "Search for traces of deleted code", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "query": { "type": "string", "description": "Search query for deleted code traces" }, "max_results": { "type": "integer", "minimum": 1, "default": 10 } }, "required": ["query"] } },
+                    { "name": "resurrect_attempt", "description": "Attempt to reconstruct deleted code from traces", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "query": { "type": "string", "description": "Description of the code to resurrect" } }, "required": ["query"] } },
+                    { "name": "resurrect_verify", "description": "Verify a resurrection attempt is accurate", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "original_name": { "type": "string", "description": "Original name of the deleted code" }, "reconstructed": { "type": "string", "description": "Reconstructed code to verify" } }, "required": ["original_name", "reconstructed"] } },
+                    { "name": "resurrect_history", "description": "Get resurrection history for the codebase", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" } } } },
+                    // -- Invention 14: Code Genetics -----------------------
+                    { "name": "genetics_dna", "description": "Extract the DNA (core patterns) of a code unit", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID" } }, "required": ["unit_id"] } },
+                    { "name": "genetics_lineage", "description": "Trace the lineage of a code unit through evolution", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID" }, "max_depth": { "type": "integer", "minimum": 1, "default": 10 } }, "required": ["unit_id"] } },
+                    { "name": "genetics_mutations", "description": "Detect mutations (unexpected changes) in code patterns", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID" } }, "required": ["unit_id"] } },
+                    { "name": "genetics_diseases", "description": "Diagnose inherited code diseases (anti-patterns passed through lineage)", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID" } }, "required": ["unit_id"] } },
+                    // -- Invention 15: Code Telepathy ----------------------
+                    { "name": "telepathy_connect", "description": "Establish telepathic connection between codebases", "inputSchema": { "type": "object", "properties": { "workspace": { "type": "string", "description": "Workspace name or id" }, "source_graph": { "type": "string", "description": "Source graph name" }, "target_graph": { "type": "string", "description": "Target graph name" } }, "required": ["workspace"] } },
+                    { "name": "telepathy_broadcast", "description": "Broadcast a code insight to connected codebases", "inputSchema": { "type": "object", "properties": { "workspace": { "type": "string", "description": "Workspace name or id" }, "insight": { "type": "string", "description": "The code insight to broadcast" }, "source_graph": { "type": "string", "description": "Source graph name" } }, "required": ["workspace", "insight"] } },
+                    { "name": "telepathy_listen", "description": "Listen for insights from connected codebases", "inputSchema": { "type": "object", "properties": { "workspace": { "type": "string", "description": "Workspace name or id" }, "target_graph": { "type": "string", "description": "Target graph name to listen from" } }, "required": ["workspace"] } },
+                    { "name": "telepathy_consensus", "description": "Find consensus patterns across connected codebases", "inputSchema": { "type": "object", "properties": { "workspace": { "type": "string", "description": "Workspace name or id" }, "concept": { "type": "string", "description": "Concept to find consensus on" } }, "required": ["workspace", "concept"] } },
+                    // -- Invention 16: Code Soul --------------------------
+                    { "name": "soul_extract", "description": "Extract the soul (essential purpose and values) of code", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID" } }, "required": ["unit_id"] } },
+                    { "name": "soul_compare", "description": "Compare souls across code reincarnations", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id_a": { "type": "integer", "description": "First code unit ID" }, "unit_id_b": { "type": "integer", "description": "Second code unit ID" } }, "required": ["unit_id_a", "unit_id_b"] } },
+                    { "name": "soul_preserve", "description": "Preserve a code soul during rewrite", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID" }, "new_language": { "type": "string", "description": "Target language for rewrite" } }, "required": ["unit_id"] } },
+                    { "name": "soul_reincarnate", "description": "Guide a soul to a new code manifestation", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "soul_id": { "type": "string", "description": "Soul identifier" }, "target_context": { "type": "string", "description": "Target context for reincarnation" } }, "required": ["soul_id", "target_context"] } },
+                    { "name": "soul_karma", "description": "Analyze the karma (positive/negative impact history) of code", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID" } }, "required": ["unit_id"] } },
+                    // -- Invention 17: Code Omniscience --------------------
+                    { "name": "omniscience_search", "description": "Search across global code knowledge", "inputSchema": { "type": "object", "properties": { "query": { "type": "string", "description": "Search query" }, "languages": { "type": "array", "items": { "type": "string" }, "description": "Filter by languages" }, "max_results": { "type": "integer", "minimum": 1, "default": 10 } }, "required": ["query"] } },
+                    { "name": "omniscience_best", "description": "Find the best implementation of a concept globally", "inputSchema": { "type": "object", "properties": { "capability": { "type": "string", "description": "Capability to find best implementation for" }, "criteria": { "type": "array", "items": { "type": "string" }, "description": "Evaluation criteria" } }, "required": ["capability"] } },
+                    { "name": "omniscience_census", "description": "Global code census for a concept", "inputSchema": { "type": "object", "properties": { "concept": { "type": "string", "description": "Concept to census" }, "languages": { "type": "array", "items": { "type": "string" }, "description": "Filter by languages" } }, "required": ["concept"] } },
+                    { "name": "omniscience_vuln", "description": "Scan for known vulnerability patterns", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "pattern": { "type": "string", "description": "Vulnerability pattern to scan for" }, "cve": { "type": "string", "description": "CVE identifier to check" } } } },
+                    { "name": "omniscience_trend", "description": "Find emerging or declining code patterns", "inputSchema": { "type": "object", "properties": { "domain": { "type": "string", "description": "Domain to analyze trends in" }, "threshold": { "type": "number", "default": 0.5 } }, "required": ["domain"] } },
+                    { "name": "omniscience_compare", "description": "Compare your code to global best practices", "inputSchema": { "type": "object", "properties": { "graph": { "type": "string", "description": "Graph name" }, "unit_id": { "type": "integer", "description": "Code unit ID to compare" } }, "required": ["unit_id"] } },
+                    { "name": "omniscience_api_usage", "description": "Find all usages of an API globally", "inputSchema": { "type": "object", "properties": { "api": { "type": "string", "description": "API name to search for" }, "method": { "type": "string", "description": "Specific method within the API" } }, "required": ["api"] } },
+                    { "name": "omniscience_solve", "description": "Find code that solves a specific problem", "inputSchema": { "type": "object", "properties": { "problem": { "type": "string", "description": "Problem description to solve" }, "languages": { "type": "array", "items": { "type": "string" }, "description": "Preferred languages" }, "max_results": { "type": "integer", "minimum": 1, "default": 5 } }, "required": ["problem"] } }
                 ]
             }),
         )
@@ -519,13 +896,88 @@ impl McpServer {
             "translation_record" => return self.tool_translation_record(id, &arguments),
             "translation_progress" => self.tool_translation_progress(id.clone(), &arguments),
             "translation_remaining" => self.tool_translation_remaining(id.clone(), &arguments),
+            // ── Invention tools ──────────────────────────────────────
+            // 1. Enhanced Impact Analysis
+            "impact_analyze" => self.tool_impact_analyze(id.clone(), &arguments),
+            "impact_path" => self.tool_impact_path(id.clone(), &arguments),
+            // 2. Enhanced Code Prophecy
+            "prophecy" => self.tool_prophecy(id.clone(), &arguments),
+            "prophecy_if" => self.tool_prophecy_if(id.clone(), &arguments),
+            // 3. Regression Oracle
+            "regression_predict" => self.tool_regression_predict(id.clone(), &arguments),
+            "regression_minimal" => self.tool_regression_minimal(id.clone(), &arguments),
+            // 4. Citation Engine
+            "codebase_ground_claim" => self.tool_codebase_ground_claim(id.clone(), &arguments),
+            "codebase_cite" => self.tool_codebase_cite(id.clone(), &arguments),
+            // 5. Hallucination Detector
+            "hallucination_check" => self.tool_hallucination_check(id.clone(), &arguments),
+            // 6. Truth Maintenance
+            "truth_register" => self.tool_truth_register(id.clone(), &arguments),
+            "truth_check" => self.tool_truth_check(id.clone(), &arguments),
+            // 7. Concept Navigation
+            "concept_find" => self.tool_concept_find(id.clone(), &arguments),
+            "concept_map" => self.tool_concept_map(id.clone(), &arguments),
+            "concept_explain" => self.tool_concept_explain(id.clone(), &arguments),
+            // 8. Architecture Inference
+            "architecture_infer" => self.tool_architecture_infer(id.clone(), &arguments),
+            "architecture_validate" => self.tool_architecture_validate(id.clone(), &arguments),
+            // 9. Semantic Search
+            "search_semantic" => self.tool_search_semantic(id.clone(), &arguments),
+            "search_similar" => self.tool_search_similar(id.clone(), &arguments),
+            "search_explain" => self.tool_search_explain(id.clone(), &arguments),
+            // 10. Multi-Codebase Compare
+            "compare_codebases" => self.tool_compare_codebases(id.clone(), &arguments),
+            "compare_concept" => self.tool_compare_concept(id.clone(), &arguments),
+            "compare_migrate" => self.tool_compare_migrate(id.clone(), &arguments),
+            // 11. Version Archaeology
+            "archaeology_node" => self.tool_archaeology_node(id.clone(), &arguments),
+            "archaeology_why" => self.tool_archaeology_why(id.clone(), &arguments),
+            "archaeology_when" => self.tool_archaeology_when(id.clone(), &arguments),
+            // 12. Pattern Extraction
+            "pattern_extract" => self.tool_pattern_extract(id.clone(), &arguments),
+            "pattern_check" => self.tool_pattern_check(id.clone(), &arguments),
+            "pattern_suggest" => self.tool_pattern_suggest(id.clone(), &arguments),
+            // 13. Code Resurrection
+            "resurrect_search" => self.tool_resurrect_search(id.clone(), &arguments),
+            "resurrect_attempt" => self.tool_resurrect_attempt(id.clone(), &arguments),
+            "resurrect_verify" => self.tool_resurrect_verify(id.clone(), &arguments),
+            "resurrect_history" => self.tool_resurrect_history(id.clone(), &arguments),
+            // 14. Code Genetics
+            "genetics_dna" => self.tool_genetics_dna(id.clone(), &arguments),
+            "genetics_lineage" => self.tool_genetics_lineage(id.clone(), &arguments),
+            "genetics_mutations" => self.tool_genetics_mutations(id.clone(), &arguments),
+            "genetics_diseases" => self.tool_genetics_diseases(id.clone(), &arguments),
+            // 15. Code Telepathy
+            "telepathy_connect" => self.tool_telepathy_connect(id.clone(), &arguments),
+            "telepathy_broadcast" => self.tool_telepathy_broadcast(id.clone(), &arguments),
+            "telepathy_listen" => self.tool_telepathy_listen(id.clone(), &arguments),
+            "telepathy_consensus" => self.tool_telepathy_consensus(id.clone(), &arguments),
+            // 16. Code Soul
+            "soul_extract" => self.tool_soul_extract(id.clone(), &arguments),
+            "soul_compare" => self.tool_soul_compare(id.clone(), &arguments),
+            "soul_preserve" => self.tool_soul_preserve(id.clone(), &arguments),
+            "soul_reincarnate" => self.tool_soul_reincarnate(id.clone(), &arguments),
+            "soul_karma" => self.tool_soul_karma(id.clone(), &arguments),
+            // 17. Code Omniscience
+            "omniscience_search" => self.tool_omniscience_search(id.clone(), &arguments),
+            "omniscience_best" => self.tool_omniscience_best(id.clone(), &arguments),
+            "omniscience_census" => self.tool_omniscience_census(id.clone(), &arguments),
+            "omniscience_vuln" => self.tool_omniscience_vuln(id.clone(), &arguments),
+            "omniscience_trend" => self.tool_omniscience_trend(id.clone(), &arguments),
+            "omniscience_compare" => self.tool_omniscience_compare(id.clone(), &arguments),
+            "omniscience_api_usage" => self.tool_omniscience_api_usage(id.clone(), &arguments),
+            "omniscience_solve" => self.tool_omniscience_solve(id.clone(), &arguments),
             _ => {
                 return JsonRpcResponse::error(
                     id,
-                    JsonRpcError::method_not_found(format!("Unknown tool: {}", tool_name)),
+                    JsonRpcError::tool_not_found(format!("Tool not found: {}", tool_name)),
                 );
             }
         };
+
+        // Per MCP spec: tool execution errors use isError: true, not JSON-RPC errors.
+        // Protocol errors (tool not found, parse error) stay as JSON-RPC errors.
+        let result = result.into_tool_error_if_needed();
 
         // Auto-log the tool call (skip analysis_log to avoid recursion).
         let now = std::time::SystemTime::now()
@@ -555,13 +1007,13 @@ impl McpServer {
             resources.push(json!({
                 "uri": format!("acb://graphs/{}/stats", name),
                 "name": format!("{} statistics", name),
-                "description": format!("Statistics for the {} code graph.", name),
+                "description": format!("Statistics for the {} code graph", name),
                 "mimeType": "application/json"
             }));
             resources.push(json!({
                 "uri": format!("acb://graphs/{}/units", name),
                 "name": format!("{} units", name),
-                "description": format!("All code units in the {} graph.", name),
+                "description": format!("All code units in the {} graph", name),
                 "mimeType": "application/json"
             }));
         }
@@ -662,7 +1114,7 @@ impl McpServer {
                 "prompts": [
                     {
                         "name": "analyse_unit",
-                        "description": "Analyse a code unit including its dependencies, stability, and test coverage.",
+                        "description": "Analyse a code unit including its dependencies, stability, and test coverage",
                         "arguments": [
                             {
                                 "name": "graph",
@@ -678,7 +1130,7 @@ impl McpServer {
                     },
                     {
                         "name": "explain_coupling",
-                        "description": "Explain coupling between two code units.",
+                        "description": "Explain coupling between two code units",
                         "arguments": [
                             {
                                 "name": "graph",
@@ -1763,6 +2215,1032 @@ impl McpServer {
             }),
         )
     }
+
+    // ========================================================================
+    // Invention tool handlers
+    // ========================================================================
+
+    // ── 1. Enhanced Impact Analysis ─────────────────────────────────────
+
+    fn tool_impact_analyze(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let max_depth = args.get("max_depth").and_then(|v| v.as_u64()).unwrap_or(5) as u32;
+        let change_type_str = args.get("change_type").and_then(|v| v.as_str()).unwrap_or("behavior");
+        let change_type = match change_type_str {
+            "signature" => crate::engine::impact::ChangeType::Signature,
+            "deletion" => crate::engine::impact::ChangeType::Deletion,
+            "rename" => crate::engine::impact::ChangeType::Rename,
+            "move" => crate::engine::impact::ChangeType::Move,
+            _ => crate::engine::impact::ChangeType::Behavior,
+        };
+
+        let analyzer = crate::engine::impact::ImpactAnalyzer::new(graph);
+        let change = crate::engine::impact::ProposedChange {
+            target: unit_id,
+            change_type,
+            description: format!("Proposed {} change to unit {}", change_type_str, unit_id),
+        };
+        let result = analyzer.analyze(change, max_depth);
+        let viz = analyzer.visualize(&result);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&viz).unwrap_or_default() }] }))
+    }
+
+    fn tool_impact_path(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let from = args.get("from").and_then(|v| v.as_u64()).unwrap_or(0);
+        let to = args.get("to").and_then(|v| v.as_u64()).unwrap_or(0);
+
+        let analyzer = crate::engine::impact::ImpactAnalyzer::new(graph);
+        let path = analyzer.impact_path(from, to);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "from": from, "to": to, "path": path })).unwrap_or_default() }] }))
+    }
+
+    // ── 2. Enhanced Code Prophecy ───────────────────────────────────────
+
+    fn tool_prophecy(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+
+        let engine = crate::temporal::prophecy_v2::EnhancedProphecyEngine::new(graph);
+        let subject = crate::temporal::prophecy_v2::ProphecySubject::Node(unit_id);
+        let horizon = crate::temporal::prophecy_v2::ProphecyHorizon::MediumTerm;
+        let result = engine.prophecy(subject, horizon);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    fn tool_prophecy_if(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let change_type_str = args.get("change_type").and_then(|v| v.as_str()).unwrap_or("behavior");
+
+        let engine = crate::temporal::prophecy_v2::EnhancedProphecyEngine::new(graph);
+        let subject = crate::temporal::prophecy_v2::ProphecySubject::Node(unit_id);
+        let horizon = crate::temporal::prophecy_v2::ProphecyHorizon::MediumTerm;
+        let scenario = format!("{} change to unit {}", change_type_str, unit_id);
+        let result = engine.prophecy_if(subject, &scenario, horizon);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    // ── 3. Regression Oracle ────────────────────────────────────────────
+
+    fn tool_regression_predict(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let max_depth = args.get("max_depth").and_then(|v| v.as_u64()).unwrap_or(5) as u32;
+
+        let predictor = crate::engine::regression::RegressionPredictor::new(graph);
+        let oracle = predictor.predict(unit_id, max_depth);
+
+        let results: Vec<Value> = oracle.likely_failures.iter().map(|p| json!({
+            "test_id": p.test.unit_id,
+            "test_function": p.test.function,
+            "test_file": p.test.file,
+            "failure_probability": p.failure_probability,
+            "reason": p.reason,
+        })).collect();
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "changed_unit": unit_id, "likely_failures": results, "safe_to_skip": oracle.safe_to_skip.len() })).unwrap_or_default() }] }))
+    }
+
+    fn tool_regression_minimal(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let _threshold = args.get("threshold").and_then(|v| v.as_f64()).unwrap_or(0.5);
+
+        let predictor = crate::engine::regression::RegressionPredictor::new(graph);
+        let minimal = predictor.minimal_test_set(unit_id);
+
+        let results: Vec<Value> = minimal.iter().map(|t| json!({
+            "test_id": t.unit_id,
+            "test_function": t.function,
+            "test_file": t.file,
+        })).collect();
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "changed_unit": unit_id, "minimal_tests": results })).unwrap_or_default() }] }))
+    }
+
+    // ── 4. Citation Engine ──────────────────────────────────────────────
+
+    fn tool_codebase_ground_claim(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let claim = args.get("claim").and_then(|v| v.as_str()).unwrap_or("");
+
+        let engine = crate::grounding::citation::CitationEngine::new(graph);
+        let result = engine.ground_claim(claim);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    fn tool_codebase_cite(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+
+        let engine = crate::grounding::citation::CitationEngine::new(graph);
+        let citation = engine.cite_node(unit_id);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "unit_id": unit_id, "citation": citation })).unwrap_or_default() }] }))
+    }
+
+    // ── 5. Hallucination Detector ───────────────────────────────────────
+
+    fn tool_hallucination_check(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let output = args.get("output").and_then(|v| v.as_str()).unwrap_or("");
+
+        let detector = crate::grounding::hallucination::HallucinationDetector::new(graph);
+        let result = detector.check_output(output);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    // ── 6. Truth Maintenance ────────────────────────────────────────────
+
+    fn tool_truth_register(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let claim = args.get("claim").and_then(|v| v.as_str()).unwrap_or("");
+
+        let mut maintainer = crate::grounding::truth::TruthMaintainer::new(graph);
+        let truth = maintainer.register_truth(claim);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&truth).unwrap_or_default() }] }))
+    }
+
+    fn tool_truth_check(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let claim = args.get("claim").and_then(|v| v.as_str()).unwrap_or("");
+
+        let maintainer = crate::grounding::truth::TruthMaintainer::new(graph);
+        let result = maintainer.check_truth(claim);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "claim": claim, "status": format!("{:?}", result) })).unwrap_or_default() }] }))
+    }
+
+    // ── 7. Concept Navigation ───────────────────────────────────────────
+
+    fn tool_concept_find(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let concept = args.get("concept").and_then(|v| v.as_str()).unwrap_or("");
+
+        let navigator = crate::semantic::concept_nav::ConceptNavigator::new(graph);
+        let query = crate::semantic::concept_nav::ConceptQuery {
+            description: concept.to_string(),
+            constraints: Vec::new(),
+        };
+        let result = navigator.find_concept(query);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    fn tool_concept_map(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+
+        let navigator = crate::semantic::concept_nav::ConceptNavigator::new(graph);
+        let concepts = navigator.map_all_concepts();
+
+        let results: Vec<Value> = concepts.iter().map(|c| json!({
+            "name": c.name,
+            "description": c.description,
+            "implementation_count": c.implementations.len(),
+        })).collect();
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "concepts": results })).unwrap_or_default() }] }))
+    }
+
+    fn tool_concept_explain(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let concept = args.get("concept").and_then(|v| v.as_str()).unwrap_or("");
+
+        let navigator = crate::semantic::concept_nav::ConceptNavigator::new(graph);
+        let result = navigator.explain_concept(concept);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    // ── 8. Architecture Inference ───────────────────────────────────────
+
+    fn tool_architecture_infer(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+
+        let inferrer = crate::semantic::architecture::ArchitectureInferrer::new(graph);
+        let architecture = inferrer.infer();
+        let diagram = inferrer.diagram(&architecture);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "architecture": architecture, "diagram": diagram })).unwrap_or_default() }] }))
+    }
+
+    fn tool_architecture_validate(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+
+        let inferrer = crate::semantic::architecture::ArchitectureInferrer::new(graph);
+        let architecture = inferrer.infer();
+        let anomalies = inferrer.validate(architecture.pattern);
+
+        let results: Vec<Value> = anomalies.iter().map(|a| json!({
+            "description": a.description,
+            "severity": format!("{:?}", a.severity),
+            "expected": a.expected,
+            "actual": a.actual,
+        })).collect();
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "anomalies": results, "count": results.len() })).unwrap_or_default() }] }))
+    }
+
+    // ── 9. Semantic Search ──────────────────────────────────────────────
+
+    fn tool_search_semantic(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
+        let top_k = args.get("top_k").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+
+        let engine = crate::index::semantic_search::SemanticSearchEngine::new(graph);
+        let result = engine.search(query, top_k);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    fn tool_search_similar(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let top_k = args.get("top_k").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+
+        let engine = crate::index::semantic_search::SemanticSearchEngine::new(graph);
+        let results = engine.find_similar(unit_id, top_k);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "unit_id": unit_id, "similar": results })).unwrap_or_default() }] }))
+    }
+
+    fn tool_search_explain(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
+
+        let engine = crate::index::semantic_search::SemanticSearchEngine::new(graph);
+        let explanation = engine.explain_match(unit_id, query);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "unit_id": unit_id, "query": query, "explanation": explanation })).unwrap_or_default() }] }))
+    }
+
+    // ── 10. Multi-Codebase Compare ──────────────────────────────────────
+
+    fn tool_compare_codebases(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let ws_id = match self.resolve_workspace_id(args) {
+            Ok(id) => id,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let workspace = match self.workspace_manager.list(&ws_id) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(e)),
+        };
+        if workspace.contexts.len() < 2 {
+            return JsonRpcResponse::error(id, JsonRpcError::invalid_params("Need at least 2 contexts in workspace to compare"));
+        }
+
+        let comparer = crate::workspace::compare::CodebaseComparer::new(
+            &workspace.contexts[0].graph, &workspace.contexts[0].id,
+            &workspace.contexts[1].graph, &workspace.contexts[1].id,
+        );
+        let result = comparer.compare();
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    fn tool_compare_concept(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let ws_id = match self.resolve_workspace_id(args) {
+            Ok(id) => id,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let concept = args.get("concept").and_then(|v| v.as_str()).unwrap_or("");
+        let workspace = match self.workspace_manager.list(&ws_id) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(e)),
+        };
+        if workspace.contexts.len() < 2 {
+            return JsonRpcResponse::error(id, JsonRpcError::invalid_params("Need at least 2 contexts"));
+        }
+
+        let comparer = crate::workspace::compare::CodebaseComparer::new(
+            &workspace.contexts[0].graph, &workspace.contexts[0].id,
+            &workspace.contexts[1].graph, &workspace.contexts[1].id,
+        );
+        let result = comparer.compare_concept(concept);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&result).unwrap_or_default() }] }))
+    }
+
+    fn tool_compare_migrate(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let ws_id = match self.resolve_workspace_id(args) {
+            Ok(id) => id,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let workspace = match self.workspace_manager.list(&ws_id) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(e)),
+        };
+        if workspace.contexts.len() < 2 {
+            return JsonRpcResponse::error(id, JsonRpcError::invalid_params("Need at least 2 contexts"));
+        }
+
+        let comparer = crate::workspace::compare::CodebaseComparer::new(
+            &workspace.contexts[0].graph, &workspace.contexts[0].id,
+            &workspace.contexts[1].graph, &workspace.contexts[1].id,
+        );
+        let plan = comparer.migration_plan();
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&plan).unwrap_or_default() }] }))
+    }
+
+    // ── 11. Version Archaeology ─────────────────────────────────────────
+
+    fn tool_archaeology_node(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+
+        let history = crate::temporal::history::ChangeHistory::new();
+        let archaeologist = crate::temporal::archaeology::CodeArchaeologist::new(graph, history);
+        let result = archaeologist.investigate(unit_id);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "unit_id": unit_id, "result": result })).unwrap_or_default() }] }))
+    }
+
+    fn tool_archaeology_why(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+
+        let history = crate::temporal::history::ChangeHistory::new();
+        let archaeologist = crate::temporal::archaeology::CodeArchaeologist::new(graph, history);
+        let result = archaeologist.investigate(unit_id);
+        let explanation = result.map(|r| r.why_explanation).unwrap_or_else(|| "Unit not found".to_string());
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "unit_id": unit_id, "explanation": explanation })).unwrap_or_default() }] }))
+    }
+
+    fn tool_archaeology_when(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+
+        let history = crate::temporal::history::ChangeHistory::new();
+        let archaeologist = crate::temporal::archaeology::CodeArchaeologist::new(graph, history);
+        let timeline = archaeologist.when_changed(unit_id);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "unit_id": unit_id, "timeline": timeline })).unwrap_or_default() }] }))
+    }
+
+    // ── 12. Pattern Extraction ──────────────────────────────────────────
+
+    fn tool_pattern_extract(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+
+        let extractor = crate::semantic::pattern_extract::PatternExtractor::new(graph);
+        let patterns = extractor.extract_patterns();
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&patterns).unwrap_or_default() }] }))
+    }
+
+    fn tool_pattern_check(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+
+        let extractor = crate::semantic::pattern_extract::PatternExtractor::new(graph);
+        let violations = extractor.check_patterns(unit_id);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "unit_id": unit_id, "violations": violations })).unwrap_or_default() }] }))
+    }
+
+    fn tool_pattern_suggest(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let file_path = args.get("file_path").and_then(|v| v.as_str()).unwrap_or("");
+
+        let extractor = crate::semantic::pattern_extract::PatternExtractor::new(graph);
+        let suggestions = extractor.suggest_patterns(file_path);
+
+        JsonRpcResponse::success(id, json!({ "content": [{ "type": "text", "text": serde_json::to_string_pretty(&json!({ "file_path": file_path, "suggestions": suggestions })).unwrap_or_default() }] }))
+    }
+
+    // -- 13. Code Resurrection --------------------------------------------------
+
+    fn tool_resurrect_search(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
+        let max_results = args.get("max_results").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+        let query_lower = query.to_lowercase();
+        let mut traces: Vec<Value> = Vec::new();
+        for unit in graph.units() {
+            let name_lower = unit.name.to_lowercase();
+            let doc_lower = unit.doc_summary.as_deref().unwrap_or("").to_lowercase();
+            if name_lower.contains(&query_lower) || doc_lower.contains(&query_lower) {
+                let is_deprecated = doc_lower.contains("deprecated") || doc_lower.contains("removed") || name_lower.contains("deprecated") || name_lower.starts_with("old_");
+                traces.push(json!({"unit_id": unit.id, "name": unit.name, "type": unit.unit_type.label(), "file": unit.file_path.display().to_string(), "is_deprecated": is_deprecated, "doc": unit.doc_summary, "trace_type": if is_deprecated { "deprecated" } else { "reference" }}));
+                if traces.len() >= max_results { break; }
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"query": query, "traces_found": traces.len(), "traces": traces})).unwrap_or_default()}]}))
+    }
+
+    fn tool_resurrect_attempt(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
+        let query_lower = query.to_lowercase();
+        let mut evidence: Vec<Value> = Vec::new();
+        for unit in graph.units() {
+            let name_lower = unit.name.to_lowercase();
+            let doc_lower = unit.doc_summary.as_deref().unwrap_or("").to_lowercase();
+            let sig_lower = unit.signature.as_deref().unwrap_or("").to_lowercase();
+            if (unit.unit_type == CodeUnitType::Test && (name_lower.contains(&query_lower) || doc_lower.contains(&query_lower)))
+                || (unit.unit_type == CodeUnitType::Doc && doc_lower.contains(&query_lower))
+                || sig_lower.contains(&query_lower) {
+                evidence.push(json!({"source": unit.unit_type.label(), "unit_id": unit.id, "name": unit.name, "signature": unit.signature, "doc": unit.doc_summary, "file": unit.file_path.display().to_string()}));
+            }
+        }
+        let status = if evidence.is_empty() { "insufficient_evidence" } else { "partial_reconstruction" };
+        let confidence = if evidence.len() > 5 { "high" } else if evidence.len() > 2 { "medium" } else { "low" };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"query": query, "status": status, "confidence": confidence, "evidence_count": evidence.len(), "evidence": evidence})).unwrap_or_default()}]}))
+    }
+
+    fn tool_resurrect_verify(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let original_name = args.get("original_name").and_then(|v| v.as_str()).unwrap_or("");
+        let reconstructed = args.get("reconstructed").and_then(|v| v.as_str()).unwrap_or("");
+        let name_lower = original_name.to_lowercase();
+        let mut refs = 0u64;
+        let mut has_tests = false;
+        for unit in graph.units() {
+            if unit.name.to_lowercase().contains(&name_lower) { refs += 1; if unit.unit_type == CodeUnitType::Test { has_tests = true; } }
+        }
+        let status = if refs > 0 { "plausible" } else { "unverifiable" };
+        let confidence = if has_tests && refs > 2 { "high" } else if refs > 0 { "medium" } else { "low" };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"original_name": original_name, "reconstructed_length": reconstructed.len(), "references": refs, "has_tests": has_tests, "status": status, "confidence": confidence})).unwrap_or_default()}]}))
+    }
+
+    fn tool_resurrect_history(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let mut versions: Vec<Value> = Vec::new();
+        for edge in graph.edges() {
+            if edge.edge_type == EdgeType::VersionOf {
+                let src = graph.get_unit(edge.source_id).map(|u| u.name.as_str()).unwrap_or("?");
+                let tgt = graph.get_unit(edge.target_id).map(|u| u.name.as_str()).unwrap_or("?");
+                versions.push(json!({"newer_id": edge.source_id, "newer": src, "older_id": edge.target_id, "older": tgt}));
+            }
+        }
+        let mut deprecated: Vec<Value> = Vec::new();
+        for unit in graph.units() {
+            let doc = unit.doc_summary.as_deref().unwrap_or("").to_lowercase();
+            if doc.contains("deprecated") || unit.name.to_lowercase().contains("deprecated") {
+                deprecated.push(json!({"unit_id": unit.id, "name": unit.name, "type": unit.unit_type.label()}));
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"versions": versions, "deprecated": deprecated})).unwrap_or_default()}]}))
+    }
+
+
+    // -- 14. Code Genetics ------------------------------------------------------
+
+    fn tool_genetics_dna(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let unit = match graph.get_unit(unit_id) {
+            Some(u) => u,
+            None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", unit_id))),
+        };
+        let outgoing = graph.edges_from(unit_id);
+        let incoming = graph.edges_to(unit_id);
+        let mut out_types: Vec<&str> = outgoing.iter().map(|e| e.edge_type.label()).collect();
+        out_types.sort(); out_types.dedup();
+        let mut in_types: Vec<&str> = incoming.iter().map(|e| e.edge_type.label()).collect();
+        in_types.sort(); in_types.dedup();
+        let naming = if unit.name.contains('_') { "snake_case" } else if unit.name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false) { "PascalCase" } else { "camelCase" };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "name": unit.name, "type": unit.unit_type.label(), "naming": naming, "complexity": unit.complexity, "is_async": unit.is_async, "visibility": format!("{:?}", unit.visibility), "out_edge_types": out_types, "in_edge_types": in_types, "out_count": outgoing.len(), "in_count": incoming.len(), "has_tests": incoming.iter().any(|e| e.edge_type == EdgeType::Tests), "has_docs": incoming.iter().any(|e| e.edge_type == EdgeType::Documents), "stability": unit.stability_score, "signature": unit.signature})).unwrap_or_default()}]}))
+    }
+
+    fn tool_genetics_lineage(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let max_depth = args.get("max_depth").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+        let mut lineage: Vec<Value> = Vec::new();
+        let mut visited = std::collections::HashSet::new();
+        let mut frontier = vec![(unit_id, 0usize)];
+        while let Some((current, depth)) = frontier.pop() {
+            if depth > max_depth || !visited.insert(current) { continue; }
+            if let Some(unit) = graph.get_unit(current) {
+                lineage.push(json!({"unit_id": current, "name": unit.name, "type": unit.unit_type.label(), "depth": depth, "file": unit.file_path.display().to_string()}));
+                for edge in graph.edges_to(current) {
+                    if matches!(edge.edge_type, EdgeType::Contains | EdgeType::Inherits | EdgeType::VersionOf | EdgeType::Implements) {
+                        frontier.push((edge.source_id, depth + 1));
+                    }
+                }
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "lineage_depth": lineage.len(), "lineage": lineage})).unwrap_or_default()}]}))
+    }
+
+    fn tool_genetics_mutations(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let unit = match graph.get_unit(unit_id) {
+            Some(u) => u,
+            None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", unit_id))),
+        };
+        let mut mutations: Vec<Value> = Vec::new();
+        if unit.complexity > 20 { mutations.push(json!({"type": "complexity_mutation", "description": format!("Complexity {} is unusually high", unit.complexity), "severity": "medium"})); }
+        if unit.stability_score < 0.3 && unit.change_count > 5 { mutations.push(json!({"type": "stability_mutation", "description": format!("Low stability ({:.2}) with {} changes", unit.stability_score, unit.change_count), "severity": "high"})); }
+        let breaks = graph.edges_from(unit_id).into_iter().filter(|e| e.edge_type == EdgeType::BreaksWith).count();
+        if breaks > 0 { mutations.push(json!({"type": "breaking_mutation", "description": format!("{} breaking relationships", breaks), "severity": "high"})); }
+        // Check naming mutation vs siblings
+        let parents: Vec<_> = graph.edges_to(unit_id).into_iter().filter(|e| e.edge_type == EdgeType::Contains).collect();
+        for pe in &parents {
+            let sibs: Vec<_> = graph.edges_from(pe.source_id).into_iter().filter(|e| e.edge_type == EdgeType::Contains && e.target_id != unit_id).collect();
+            let unit_snake = unit.name.contains('_');
+            for se in &sibs {
+                if let Some(sib) = graph.get_unit(se.target_id) {
+                    if sib.unit_type == unit.unit_type && sib.name.contains('_') != unit_snake {
+                        mutations.push(json!({"type": "naming_mutation", "description": format!("'{}' differs from sibling '{}'", unit.name, sib.name), "severity": "low"}));
+                        break;
+                    }
+                }
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "name": unit.name, "mutations": mutations})).unwrap_or_default()}]}))
+    }
+
+    fn tool_genetics_diseases(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let unit = match graph.get_unit(unit_id) {
+            Some(u) => u,
+            None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", unit_id))),
+        };
+        let mut diseases: Vec<Value> = Vec::new();
+        let out = graph.edges_from(unit_id);
+        let inc = graph.edges_to(unit_id);
+        if out.len() > 20 { diseases.push(json!({"disease": "god_object", "severity": "high", "detail": format!("{} outgoing edges", out.len())})); }
+        let targets: std::collections::HashSet<u64> = out.iter().map(|e| e.target_id).collect();
+        let sources: std::collections::HashSet<u64> = inc.iter().map(|e| e.source_id).collect();
+        let circular: Vec<u64> = targets.intersection(&sources).copied().collect();
+        if !circular.is_empty() { diseases.push(json!({"disease": "circular_dependency", "severity": "high", "with": circular})); }
+        let calls_out = out.iter().filter(|e| e.edge_type == EdgeType::Calls).count();
+        let calls_in = inc.iter().filter(|e| e.edge_type == EdgeType::Calls).count();
+        if calls_out > 10 && calls_out > calls_in * 3 { diseases.push(json!({"disease": "feature_envy", "severity": "medium", "calls_out": calls_out, "calls_in": calls_in})); }
+        if !inc.iter().any(|e| e.edge_type == EdgeType::Tests) && unit.unit_type == CodeUnitType::Function { diseases.push(json!({"disease": "untested", "severity": "medium"})); }
+        let non_contains = inc.iter().filter(|e| e.edge_type != EdgeType::Contains).count();
+        if non_contains == 0 && !inc.is_empty() { diseases.push(json!({"disease": "orphan_code", "severity": "medium"})); }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "name": unit.name, "diseases": diseases})).unwrap_or_default()}]}))
+    }
+
+
+    // -- 15. Code Telepathy -----------------------------------------------------
+
+    fn tool_telepathy_connect(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let ws_id = match self.resolve_workspace_id(args) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let workspace = match self.workspace_manager.list(&ws_id) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(e)),
+        };
+        let connections: Vec<Value> = workspace.contexts.iter().map(|c| json!({"context_id": c.id, "role": c.role.label(), "path": c.path, "units": c.graph.units().len()})).collect();
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"workspace": ws_id, "status": "connected", "connections": connections})).unwrap_or_default()}]}))
+    }
+
+    fn tool_telepathy_broadcast(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let ws_id = match self.resolve_workspace_id(args) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let insight = args.get("insight").and_then(|v| v.as_str()).unwrap_or("");
+        let source_graph = args.get("source_graph").and_then(|v| v.as_str()).unwrap_or("");
+        let results = match self.workspace_manager.query_all(&ws_id, insight) {
+            Ok(r) => r,
+            Err(e) => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(e)),
+        };
+        let receivers: Vec<Value> = results.iter().map(|r| json!({"context_id": r.context_id, "role": r.context_role.label(), "matches": r.matches.len()})).collect();
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"workspace": ws_id, "insight": insight, "source": source_graph, "receivers": receivers})).unwrap_or_default()}]}))
+    }
+
+    fn tool_telepathy_listen(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let ws_id = match self.resolve_workspace_id(args) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let workspace = match self.workspace_manager.list(&ws_id) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(e)),
+        };
+        let mut insights: Vec<Value> = Vec::new();
+        for ctx in &workspace.contexts {
+            let high_cx: Vec<&str> = ctx.graph.units().iter().filter(|u| u.complexity > 15).take(5).map(|u| u.name.as_str()).collect();
+            if !high_cx.is_empty() { insights.push(json!({"context": ctx.id, "role": ctx.role.label(), "type": "high_complexity", "units": high_cx})); }
+            let tests = ctx.graph.units().iter().filter(|u| u.unit_type == CodeUnitType::Test).count();
+            let funcs = ctx.graph.units().iter().filter(|u| u.unit_type == CodeUnitType::Function).count();
+            if funcs > 0 { insights.push(json!({"context": ctx.id, "role": ctx.role.label(), "type": "test_ratio", "tests": tests, "functions": funcs, "ratio": tests as f64 / funcs as f64})); }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"workspace": ws_id, "insights": insights})).unwrap_or_default()}]}))
+    }
+
+    fn tool_telepathy_consensus(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let ws_id = match self.resolve_workspace_id(args) {
+            Ok(ws) => ws,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let concept = args.get("concept").and_then(|v| v.as_str()).unwrap_or("");
+        let results = match self.workspace_manager.query_all(&ws_id, concept) {
+            Ok(r) => r,
+            Err(e) => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(e)),
+        };
+        let total = results.len();
+        let with_matches = results.iter().filter(|r| !r.matches.is_empty()).count();
+        let level = if with_matches == total && total > 0 { "universal" } else if with_matches as f64 / total.max(1) as f64 > 0.5 { "majority" } else if with_matches > 0 { "minority" } else { "none" };
+        let details: Vec<Value> = results.iter().map(|r| json!({"context_id": r.context_id, "role": r.context_role.label(), "has_concept": !r.matches.is_empty(), "count": r.matches.len()})).collect();
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"concept": concept, "consensus": level, "total": total, "with_concept": with_matches, "details": details})).unwrap_or_default()}]}))
+    }
+
+
+    // -- 16. Code Soul ----------------------------------------------------------
+
+    fn tool_soul_extract(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let unit = match graph.get_unit(unit_id) {
+            Some(u) => u,
+            None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", unit_id))),
+        };
+        let out = graph.edges_from(unit_id);
+        let inc = graph.edges_to(unit_id);
+        let purpose = format!("{} {} that {}", format!("{:?}", unit.visibility).to_lowercase(), unit.unit_type.label(),
+            if out.iter().any(|e| e.edge_type == EdgeType::Calls) { "orchestrates calls" }
+            else if unit.unit_type == CodeUnitType::Test { "verifies behavior" }
+            else if unit.unit_type == CodeUnitType::Doc { "documents knowledge" }
+            else { "provides functionality" });
+        let mut values: Vec<&str> = Vec::new();
+        if inc.iter().any(|e| e.edge_type == EdgeType::Tests) { values.push("correctness"); }
+        if inc.iter().any(|e| e.edge_type == EdgeType::Documents) { values.push("documentation"); }
+        if unit.stability_score > 0.8 { values.push("stability"); }
+        if unit.complexity < 5 { values.push("simplicity"); }
+        if unit.is_async { values.push("concurrency"); }
+        let deps: Vec<String> = out.iter().filter_map(|e| graph.get_unit(e.target_id).map(|u| format!("{}:{}", e.edge_type.label(), u.name.clone()))).take(10).collect();
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "name": unit.name, "soul_id": format!("soul-{}-{}", unit_id, unit.name), "purpose": purpose, "values": values, "dependencies": deps, "signature": unit.signature, "complexity": unit.complexity, "stability": unit.stability_score, "language": unit.language.name()})).unwrap_or_default()}]}))
+    }
+
+    fn tool_soul_compare(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let id_a = args.get("unit_id_a").and_then(|v| v.as_u64()).unwrap_or(0);
+        let id_b = args.get("unit_id_b").and_then(|v| v.as_u64()).unwrap_or(0);
+        let ua = match graph.get_unit(id_a) { Some(u) => u, None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", id_a))) };
+        let ub = match graph.get_unit(id_b) { Some(u) => u, None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", id_b))) };
+        let ea: std::collections::HashSet<String> = graph.edges_from(id_a).iter().map(|e| e.edge_type.label().to_string()).collect();
+        let eb: std::collections::HashSet<String> = graph.edges_from(id_b).iter().map(|e| e.edge_type.label().to_string()).collect();
+        let shared: Vec<&String> = ea.intersection(&eb).collect();
+        let type_match = ua.unit_type == ub.unit_type;
+        let cdiff = (ua.complexity as i64 - ub.complexity as i64).unsigned_abs();
+        let mut sim = 0.0f64;
+        if type_match { sim += 0.3; }
+        if ua.is_async == ub.is_async { sim += 0.1; }
+        if cdiff < 5 { sim += 0.2; }
+        sim += 0.4 * (shared.len() as f64 / ea.len().max(eb.len()).max(1) as f64);
+        let verdict = if sim > 0.8 { "same_soul" } else if sim > 0.5 { "related_souls" } else { "different_souls" };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_a": {"id": id_a, "name": ua.name}, "unit_b": {"id": id_b, "name": ub.name}, "similarity": sim, "type_match": type_match, "complexity_diff": cdiff, "shared_edges": shared, "verdict": verdict})).unwrap_or_default()}]}))
+    }
+
+    fn tool_soul_preserve(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let new_lang = args.get("new_language").and_then(|v| v.as_str()).unwrap_or("unknown");
+        let unit = match graph.get_unit(unit_id) { Some(u) => u, None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", unit_id))) };
+        let out = graph.edges_from(unit_id);
+        let inc = graph.edges_to(unit_id);
+        let risk = if out.len() > 10 { "high" } else if out.len() > 5 { "medium" } else { "low" };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "name": unit.name, "original_language": unit.language.name(), "target_language": new_lang, "soul_id": format!("soul-{}-{}", unit_id, unit.name), "purpose": unit.doc_summary, "signature": unit.signature, "deps": out.len(), "dependents": inc.len(), "is_async": unit.is_async, "tests": inc.iter().filter(|e| e.edge_type == EdgeType::Tests).count(), "risk": risk})).unwrap_or_default()}]}))
+    }
+
+    fn tool_soul_reincarnate(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_gn, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let soul_id = args.get("soul_id").and_then(|v| v.as_str()).unwrap_or("");
+        let target_ctx = args.get("target_context").and_then(|v| v.as_str()).unwrap_or("");
+        let uid: u64 = soul_id.strip_prefix("soul-").and_then(|s| s.split('-').next()).and_then(|s| s.parse().ok()).unwrap_or(0);
+        let guide = if let Some(unit) = graph.get_unit(uid) {
+            let deps: Vec<String> = graph.edges_from(uid).iter().filter_map(|e| graph.get_unit(e.target_id).map(|u| u.name.clone())).take(10).collect();
+            json!({"soul_id": soul_id, "target": target_ctx, "status": "guidance_ready", "name": unit.name, "type": unit.unit_type.label(), "signature": unit.signature, "purpose": unit.doc_summary, "deps": deps})
+        } else {
+            json!({"soul_id": soul_id, "target": target_ctx, "status": "soul_not_found"})
+        };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&guide).unwrap_or_default()}]}))
+    }
+
+    fn tool_soul_karma(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let unit = match graph.get_unit(unit_id) { Some(u) => u, None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", unit_id))) };
+        let inc = graph.edges_to(unit_id);
+        let out = graph.edges_from(unit_id);
+        let mut pos = 0i64; let mut neg = 0i64;
+        let mut details: Vec<Value> = Vec::new();
+        let tc = inc.iter().filter(|e| e.edge_type == EdgeType::Tests).count();
+        if tc > 0 { pos += tc as i64 * 10; details.push(json!({"k": "positive", "r": format!("{} tests", tc), "p": tc as i64 * 10})); }
+        let dc = inc.iter().filter(|e| e.edge_type == EdgeType::Documents).count();
+        if dc > 0 { pos += dc as i64 * 5; details.push(json!({"k": "positive", "r": format!("{} docs", dc), "p": dc as i64 * 5})); }
+        if unit.stability_score > 0.8 { pos += 15; details.push(json!({"k": "positive", "r": "high stability", "p": 15})); }
+        if unit.complexity < 10 { pos += 10; details.push(json!({"k": "positive", "r": "low complexity", "p": 10})); }
+        let br = out.iter().filter(|e| e.edge_type == EdgeType::BreaksWith).count();
+        if br > 0 { neg += br as i64 * 20; details.push(json!({"k": "negative", "r": format!("{} breaks", br), "p": -(br as i64 * 20)})); }
+        if unit.complexity > 20 { neg += 15; details.push(json!({"k": "negative", "r": "very high complexity", "p": -15})); }
+        if tc == 0 && unit.unit_type == CodeUnitType::Function { neg += 10; details.push(json!({"k": "negative", "r": "no tests", "p": -10})); }
+        if unit.stability_score < 0.3 { neg += 10; details.push(json!({"k": "negative", "r": "low stability", "p": -10})); }
+        let total = pos - neg;
+        let level = if total > 30 { "enlightened" } else if total > 10 { "good" } else if total > -10 { "neutral" } else { "troubled" };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "name": unit.name, "karma": total, "positive": pos, "negative": neg, "level": level, "details": details})).unwrap_or_default()}]}))
+    }
+
+
+    // -- 17. Code Omniscience ---------------------------------------------------
+
+    fn tool_omniscience_search(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
+        let languages: Vec<String> = args.get("languages").and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect()).unwrap_or_default();
+        let max_results = args.get("max_results").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+        let ql = query.to_lowercase();
+        let mut results: Vec<Value> = Vec::new();
+        for (gn, graph) in &self.graphs {
+            for unit in graph.units() {
+                if results.len() >= max_results { break; }
+                if !languages.is_empty() && !languages.iter().any(|l| l.eq_ignore_ascii_case(unit.language.name())) { continue; }
+                if unit.name.to_lowercase().contains(&ql) || unit.qualified_name.to_lowercase().contains(&ql) {
+                    results.push(json!({"graph": gn, "unit_id": unit.id, "name": unit.name, "qualified_name": unit.qualified_name, "type": unit.unit_type.label(), "language": unit.language.name(), "file": unit.file_path.display().to_string()}));
+                }
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"query": query, "count": results.len(), "results": results})).unwrap_or_default()}]}))
+    }
+
+    fn tool_omniscience_best(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let cap = args.get("capability").and_then(|v| v.as_str()).unwrap_or("");
+        let criteria: Vec<String> = args.get("criteria").and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect()).unwrap_or_default();
+        let cl = cap.to_lowercase();
+        let mut cands: Vec<Value> = Vec::new();
+        for (gn, graph) in &self.graphs {
+            for unit in graph.units() {
+                if unit.name.to_lowercase().contains(&cl) || unit.qualified_name.to_lowercase().contains(&cl) {
+                    let inc = graph.edges_to(unit.id);
+                    let has_t = inc.iter().any(|e| e.edge_type == EdgeType::Tests);
+                    let has_d = inc.iter().any(|e| e.edge_type == EdgeType::Documents);
+                    let mut s = 0.15f64;
+                    if has_t { s += 0.3; } if has_d { s += 0.2; }
+                    if unit.stability_score > 0.7 { s += 0.2; }
+                    if unit.complexity < 15 { s += 0.15; }
+                    cands.push(json!({"graph": gn, "unit_id": unit.id, "name": unit.name, "score": s, "has_tests": has_t, "has_docs": has_d, "stability": unit.stability_score, "complexity": unit.complexity}));
+                }
+            }
+        }
+        cands.sort_by(|a, b| b["score"].as_f64().unwrap_or(0.0).partial_cmp(&a["score"].as_f64().unwrap_or(0.0)).unwrap_or(std::cmp::Ordering::Equal));
+        cands.truncate(5);
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"capability": cap, "criteria": criteria, "best": cands})).unwrap_or_default()}]}))
+    }
+
+    fn tool_omniscience_census(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let concept = args.get("concept").and_then(|v| v.as_str()).unwrap_or("");
+        let languages: Vec<String> = args.get("languages").and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect()).unwrap_or_default();
+        let cl = concept.to_lowercase();
+        let mut by_lang: HashMap<String, usize> = HashMap::new();
+        let mut by_type: HashMap<String, usize> = HashMap::new();
+        let mut total = 0usize;
+        for (_gn, graph) in &self.graphs {
+            for unit in graph.units() {
+                if !languages.is_empty() && !languages.iter().any(|l| l.eq_ignore_ascii_case(unit.language.name())) { continue; }
+                if unit.name.to_lowercase().contains(&cl) || unit.qualified_name.to_lowercase().contains(&cl) {
+                    total += 1;
+                    *by_lang.entry(unit.language.name().to_string()).or_insert(0) += 1;
+                    *by_type.entry(unit.unit_type.label().to_string()).or_insert(0) += 1;
+                }
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"concept": concept, "total": total, "by_language": by_lang, "by_type": by_type, "graphs": self.graphs.len()})).unwrap_or_default()}]}))
+    }
+
+    fn tool_omniscience_vuln(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let pattern = args.get("pattern").and_then(|v| v.as_str()).unwrap_or("");
+        let cve = args.get("cve").and_then(|v| v.as_str()).unwrap_or("");
+        let kws: Vec<&str> = if pattern.is_empty() { vec!["unsafe", "eval", "exec", "sql", "inject", "deserialize", "shell"] } else { vec![pattern] };
+        let mut findings: Vec<Value> = Vec::new();
+        for unit in graph.units() {
+            let nl = unit.name.to_lowercase();
+            let sl = unit.signature.as_deref().unwrap_or("").to_lowercase();
+            for &kw in &kws {
+                if nl.contains(kw) || sl.contains(kw) {
+                    let sev = if kw == "unsafe" || kw == "eval" || kw == "exec" { "high" } else { "medium" };
+                    findings.push(json!({"unit_id": unit.id, "name": unit.name, "type": unit.unit_type.label(), "file": unit.file_path.display().to_string(), "pattern": kw, "severity": sev}));
+                    break;
+                }
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"pattern": pattern, "cve": cve, "count": findings.len(), "findings": findings})).unwrap_or_default()}]}))
+    }
+
+    fn tool_omniscience_trend(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let domain = args.get("domain").and_then(|v| v.as_str()).unwrap_or("");
+        let dl = domain.to_lowercase();
+        let mut trends: Vec<Value> = Vec::new();
+        for (gn, graph) in &self.graphs {
+            let m: Vec<_> = graph.units().iter().filter(|u| u.name.to_lowercase().contains(&dl) || u.qualified_name.to_lowercase().contains(&dl)).collect();
+            if !m.is_empty() {
+                let avg_s: f64 = m.iter().map(|u| u.stability_score as f64).sum::<f64>() / m.len() as f64;
+                let avg_c: f64 = m.iter().map(|u| u.change_count as f64).sum::<f64>() / m.len() as f64;
+                let avg_x: f64 = m.iter().map(|u| u.complexity as f64).sum::<f64>() / m.len() as f64;
+                let dir = if avg_c > 5.0 && avg_s < 0.5 { "declining" } else if avg_s > 0.7 && avg_x < 15.0 { "stable" } else { "emerging" };
+                trends.push(json!({"graph": gn, "count": m.len(), "avg_stability": avg_s, "avg_changes": avg_c, "avg_complexity": avg_x, "trend": dir}));
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"domain": domain, "graphs": self.graphs.len(), "trends": trends})).unwrap_or_default()}]}))
+    }
+
+    fn tool_omniscience_compare(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let (_, graph) = match self.resolve_graph(args) {
+            Ok(g) => g,
+            Err(e) => return JsonRpcResponse::error(id, e),
+        };
+        let unit_id = args.get("unit_id").and_then(|v| v.as_u64()).unwrap_or(0);
+        let unit = match graph.get_unit(unit_id) { Some(u) => u, None => return JsonRpcResponse::error(id, JsonRpcError::invalid_params(format!("Unit {} not found", unit_id))) };
+        let inc = graph.edges_to(unit_id);
+        let out = graph.edges_from(unit_id);
+        let has_t = inc.iter().any(|e| e.edge_type == EdgeType::Tests);
+        let has_d = inc.iter().any(|e| e.edge_type == EdgeType::Documents);
+        let mut practices: Vec<Value> = Vec::new();
+        let mut score = 0u32;
+        if has_t { score += 20; practices.push(json!({"p": "tests", "s": "pass", "pts": 20})); } else { practices.push(json!({"p": "tests", "s": "fail", "rec": "Add tests"})); }
+        if has_d { score += 15; practices.push(json!({"p": "docs", "s": "pass", "pts": 15})); } else { practices.push(json!({"p": "docs", "s": "fail", "rec": "Add docs"})); }
+        if unit.complexity < 10 { score += 20; practices.push(json!({"p": "complexity", "s": "pass", "pts": 20})); } else if unit.complexity < 20 { score += 10; practices.push(json!({"p": "complexity", "s": "warn", "pts": 10})); } else { practices.push(json!({"p": "complexity", "s": "fail", "rec": "Refactor"})); }
+        if unit.stability_score > 0.7 { score += 15; practices.push(json!({"p": "stability", "s": "pass", "pts": 15})); } else { practices.push(json!({"p": "stability", "s": "fail", "rec": "Stabilize"})); }
+        if out.len() < 10 { score += 15; practices.push(json!({"p": "coupling", "s": "pass", "pts": 15})); } else { practices.push(json!({"p": "coupling", "s": "fail", "rec": "Reduce deps"})); }
+        if unit.doc_summary.is_some() { score += 15; practices.push(json!({"p": "doc_summary", "s": "pass", "pts": 15})); } else { practices.push(json!({"p": "doc_summary", "s": "fail", "rec": "Add summary"})); }
+        let grade = if score >= 80 { "A" } else if score >= 60 { "B" } else if score >= 40 { "C" } else { "D" };
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"unit_id": unit_id, "name": unit.name, "score": score, "max": 100, "grade": grade, "practices": practices})).unwrap_or_default()}]}))
+    }
+
+    fn tool_omniscience_api_usage(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let api = args.get("api").and_then(|v| v.as_str()).unwrap_or("");
+        let method = args.get("method").and_then(|v| v.as_str()).unwrap_or("");
+        let al = api.to_lowercase();
+        let ml = method.to_lowercase();
+        let mut usages: Vec<Value> = Vec::new();
+        for (gn, graph) in &self.graphs {
+            for unit in graph.units() {
+                let nl = unit.name.to_lowercase();
+                let ql = unit.qualified_name.to_lowercase();
+                let sl = unit.signature.as_deref().unwrap_or("").to_lowercase();
+                let ma = nl.contains(&al) || ql.contains(&al) || sl.contains(&al);
+                let mm = method.is_empty() || nl.contains(&ml) || sl.contains(&ml);
+                if ma && mm {
+                    usages.push(json!({"graph": gn, "unit_id": unit.id, "name": unit.name, "qualified_name": unit.qualified_name, "type": unit.unit_type.label(), "file": unit.file_path.display().to_string(), "signature": unit.signature}));
+                }
+            }
+        }
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"api": api, "method": method, "count": usages.len(), "usages": usages})).unwrap_or_default()}]}))
+    }
+
+    fn tool_omniscience_solve(&self, id: Value, args: &Value) -> JsonRpcResponse {
+        let problem = args.get("problem").and_then(|v| v.as_str()).unwrap_or("");
+        let languages: Vec<String> = args.get("languages").and_then(|v| v.as_array()).map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect()).unwrap_or_default();
+        let max_r = args.get("max_results").and_then(|v| v.as_u64()).unwrap_or(5) as usize;
+        let kws: Vec<String> = problem.to_lowercase().split_whitespace().filter(|w| w.len() > 3).map(String::from).collect();
+        let mut sols: Vec<Value> = Vec::new();
+        for (gn, graph) in &self.graphs {
+            for unit in graph.units() {
+                if sols.len() >= max_r { break; }
+                if !languages.is_empty() && !languages.iter().any(|l| l.eq_ignore_ascii_case(unit.language.name())) { continue; }
+                let nl = unit.name.to_lowercase();
+                let dl = unit.doc_summary.as_deref().unwrap_or("").to_lowercase();
+                let mc = kws.iter().filter(|kw| nl.contains(kw.as_str()) || dl.contains(kw.as_str())).count();
+                if mc > 0 {
+                    let rel = mc as f64 / kws.len().max(1) as f64;
+                    sols.push(json!({"graph": gn, "unit_id": unit.id, "name": unit.name, "type": unit.unit_type.label(), "language": unit.language.name(), "file": unit.file_path.display().to_string(), "relevance": rel, "doc": unit.doc_summary, "signature": unit.signature}));
+                }
+            }
+        }
+        sols.sort_by(|a, b| b["relevance"].as_f64().unwrap_or(0.0).partial_cmp(&a["relevance"].as_f64().unwrap_or(0.0)).unwrap_or(std::cmp::Ordering::Equal));
+        sols.truncate(max_r);
+        JsonRpcResponse::success(id, json!({"content": [{"type": "text", "text": serde_json::to_string_pretty(&json!({"problem": problem, "count": sols.len(), "solutions": sols})).unwrap_or_default()}]}))
+    }
+
 }
 
 /// Truncate a JSON value to a short summary string.
