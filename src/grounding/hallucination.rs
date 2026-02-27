@@ -249,10 +249,10 @@ impl<'g> HallucinationDetector<'g> {
 
         for unit in self.graph.units() {
             let u_lower = unit.name.to_lowercase();
-            if u_lower.starts_with(&lower) || lower.starts_with(&u_lower) {
-                if !results.iter().any(|(n, _)| *n == unit.name) {
-                    results.push((unit.name.clone(), 0));
-                }
+            if (u_lower.starts_with(&lower) || lower.starts_with(&u_lower))
+                && !results.iter().any(|(n, _)| *n == unit.name)
+            {
+                results.push((unit.name.clone(), 0));
             }
         }
 
@@ -263,7 +263,7 @@ impl<'g> HallucinationDetector<'g> {
 
 /// Split text into individual claim sentences.
 fn split_into_claims(text: &str) -> Vec<String> {
-    text.split(|c: char| c == '.' || c == '\n')
+    text.split(['.', '\n'])
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty() && s.len() > 5)
         .collect()
