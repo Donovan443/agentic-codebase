@@ -9,7 +9,7 @@ members = [
 exclude = ["npm/wasm"]
 
 [workspace.dependencies]
-agentic-contracts = { version = "0.2.0", path = "../agentic-contracts" }
+agentic-sdk = { version = "0.2.0", path = "../agentic-sdk" }
 
 [workspace.package]
 version = "0.3.0"
@@ -51,8 +51,8 @@ name = "agentic-codebase-mcp"
 path = "src/bin/agentic-codebase-mcp.rs"
 
 [dependencies]
-# Contracts (shared sister traits)
-agentic-contracts = { workspace = true }
+# SDK (shared sister traits)
+agentic-sdk = { workspace = true }
 
 # Parsing - tree-sitter ecosystem
 tree-sitter = "0.22"

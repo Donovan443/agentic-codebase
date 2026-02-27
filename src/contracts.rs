@@ -1,4 +1,4 @@
-//! Contracts bridge — implements agentic-contracts v0.2.0 traits for Codebase.
+//! Contracts bridge — implements agentic-sdk v0.2.0 traits for Codebase.
 //!
 //! This module provides `CodebaseSister`, a contracts-compliant wrapper
 //! around the core `CodeGraph` + grounding engine. It implements:
@@ -12,7 +12,7 @@
 //! The MCP server can use `CodebaseSister` instead of raw graph + engine
 //! to get compile-time contracts compliance.
 
-use agentic_contracts::prelude::*;
+use agentic_sdk::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -375,7 +375,7 @@ impl WorkspaceManagement for CodebaseSister {
 // GROUNDING (bridges existing GroundingEngine to contracts trait)
 // ═══════════════════════════════════════════════════════════════════
 
-impl agentic_contracts::prelude::Grounding for CodebaseSister {
+impl agentic_sdk::prelude::Grounding for CodebaseSister {
     fn ground(&self, claim: &str) -> SisterResult<GroundingResult> {
         let engine = self.grounding_engine().ok_or_else(|| {
             SisterError::new(ErrorCode::InvalidState, "No active graph for grounding")
@@ -786,7 +786,7 @@ mod tests {
 
         // Ground a claim with known symbols
         let result =
-            agentic_contracts::prelude::Grounding::ground(&sister, "process_payment").unwrap();
+            agentic_sdk::prelude::Grounding::ground(&sister, "process_payment").unwrap();
         // Should find the function
         assert!(
             result.status == GroundingStatus::Verified || result.status == GroundingStatus::Partial,
@@ -796,7 +796,7 @@ mod tests {
 
         // Ground a claim with unknown symbol
         let result =
-            agentic_contracts::prelude::Grounding::ground(&sister, "totally_fake_function_xyz")
+            agentic_sdk::prelude::Grounding::ground(&sister, "totally_fake_function_xyz")
                 .unwrap();
         assert_eq!(result.status, GroundingStatus::Ungrounded);
     }
@@ -807,7 +807,7 @@ mod tests {
         add_test_units(&mut sister);
 
         let evidence =
-            agentic_contracts::prelude::Grounding::evidence(&sister, "process_payment", 10)
+            agentic_sdk::prelude::Grounding::evidence(&sister, "process_payment", 10)
                 .unwrap();
         assert!(
             !evidence.is_empty(),
@@ -822,7 +822,7 @@ mod tests {
         add_test_units(&mut sister);
 
         let suggestions =
-            agentic_contracts::prelude::Grounding::suggest(&sister, "process_pay", 5).unwrap();
+            agentic_sdk::prelude::Grounding::suggest(&sister, "process_pay", 5).unwrap();
         // Should suggest "process_payment" as a similar name
         assert!(!suggestions.is_empty());
     }
