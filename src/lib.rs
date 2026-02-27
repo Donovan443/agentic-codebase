@@ -26,6 +26,7 @@
 pub mod cli;
 pub mod collective;
 pub mod config;
+pub mod contracts;
 pub mod engine;
 pub mod ffi;
 pub mod format;

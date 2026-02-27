@@ -8,6 +8,9 @@ members = [
 ]
 exclude = ["npm/wasm"]
 
+[workspace.dependencies]
+agentic-contracts = { version = "0.2.0", path = "../agentic-contracts" }
+
 [workspace.package]
 version = "0.3.0"
 edition = "2021"
@@ -48,6 +51,9 @@ name = "agentic-codebase-mcp"
 path = "src/bin/agentic-codebase-mcp.rs"
 
 [dependencies]
+# Contracts (shared sister traits)
+agentic-contracts = { workspace = true }
+
 # Parsing - tree-sitter ecosystem
 tree-sitter = "0.22"
 tree-sitter-python = "0.21"
@@ -82,7 +88,7 @@ serde_json = "1"
 memmap2 = "0.9"
 
 # Timestamp
-chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+chrono = { version = "0.4", default-features = false, features = ["std", "clock", "serde"] }
 
 # File system traversal
 walkdir = "2"
