@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="#install"><img src="https://img.shields.io/badge/pip_install-agentic--codebase-3B82F6?style=for-the-badge&logo=python&logoColor=white" alt="pip install"></a>
   <a href="#install"><img src="https://img.shields.io/badge/cargo_install-agentic--codebase-F59E0B?style=for-the-badge&logo=rust&logoColor=white" alt="cargo install"></a>
   <a href="#mcp-server"><img src="https://img.shields.io/badge/MCP_Server-acb--mcp-10B981?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0xMiAydjIwTTIgMTJoMjAiLz48L3N2Zz4=&logoColor=white" alt="MCP Server"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22C55E?style=for-the-badge" alt="MIT License"></a>
@@ -213,7 +214,22 @@ Configure in Claude Desktop (`claude_desktop_config.json`):
 }
 ```
 
-See the [Full Install Guide](INSTALL.md) for VS Code, Cursor, and Windsurf configuration.
+### Configure VS Code / Cursor
+
+Add to `.vscode/settings.json`:
+
+```json
+{
+  "mcp.servers": {
+    "agentic-codebase": {
+      "command": "agentic-codebase-mcp",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+See the [Full Install Guide](INSTALL.md) for Windsurf and other client configuration.
 
 ---
 
@@ -238,6 +254,23 @@ See the [Full Install Guide](INSTALL.md) for VS Code, Cursor, and Windsurf confi
    ```bash
    acb query project.acb test-gap
    ```
+
+---
+
+## Validation
+
+This isn't a prototype. It's tested beyond what most production systems require.
+
+| Suite | Tests | |
+|:---|---:|:---|
+| Rust core engine | **38** | Unit tests |
+| Integration tests | **460** | Multi-phase integration coverage |
+| V2 stress tests | **69** | Grounding, workspaces, translation |
+| Benchmarks | **21** | Criterion statistical benchmarks |
+| **Total** | **567** | All passing, 0 Clippy warnings |
+
+**One research paper:**
+- [Paper I: AgenticCodebase -- Semantic Compiler (7 pages)](paper/paper-i-semantic-compiler/agenticcodebase-paper.pdf)
 
 ---
 
@@ -434,6 +467,45 @@ Your agent's code knowledge. Semantic understanding.
 | Size | ~2-3 GB over 20 years |
 | Format | Binary semantic graph |
 | Works with | Any coding model |
+
+---
+
+## Repository Structure
+
+This is a Cargo workspace monorepo containing the core library, CLI, MCP server, and FFI bindings.
+
+```
+agentic-codebase/
+├── Cargo.toml                    # Workspace root
+├── src/                          # Core library (crates.io: agentic-codebase)
+├── crates/
+│   ├── agentic-codebase-cli/     # CLI (crates.io: agentic-codebase-cli) — `acb` binary
+│   ├── agentic-codebase-mcp/     # MCP server (crates.io: agentic-codebase-mcp)
+│   └── agentic-codebase-ffi/     # FFI bindings (crates.io: agentic-codebase-ffi)
+├── ffi/                          # Additional FFI support
+├── python/                       # Python SDK (PyPI: agentic-codebase)
+├── npm/                          # npm WASM package (@agenticamem/codebase)
+├── tests/                        # Integration + stress tests
+├── benches/                      # Criterion benchmarks
+├── testdata/                     # Test fixtures
+├── paper/                        # Research paper (Paper I: Semantic Compiler)
+├── docs/                         # API reference, guides
+├── examples/                     # Usage examples
+└── scripts/                      # Build and release scripts
+```
+
+### Running Tests
+
+```bash
+# All workspace tests (unit + integration + stress)
+cargo test --workspace
+
+# Core library only
+cargo test -p agentic-codebase
+
+# Benchmarks
+cargo bench --workspace
+```
 
 ---
 
