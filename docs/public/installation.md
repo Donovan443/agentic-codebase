@@ -42,3 +42,7 @@ agentic-codebase-mcp --version
 
 - Restart your MCP client.
 - Confirm `agentic-codebase` appears in MCP server listings.
+
+## Troubleshooting
+
+If `acb` is not found after installation, ensure `~/.cargo/bin` is in your `PATH`. You can add it by appending `export PATH="$HOME/.cargo/bin:$PATH"` to your shell profile (`.bashrc`, `.zshrc`, or equivalent) and restarting your terminal.

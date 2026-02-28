@@ -214,6 +214,58 @@ All tools exposed by the `agentic-codebase-mcp` MCP server:
 | `translation_progress` | Get migration progress statistics |
 | `translation_remaining` | List symbols not yet ported |
 
+### Invention Tools
+
+#### Resurrection Tools
+
+| Tool | Purpose |
+|------|---------|
+| `resurrect_search` | Search for traces of deleted code |
+| `resurrect_attempt` | Attempt to reconstruct deleted code from traces |
+| `resurrect_verify` | Verify a resurrection attempt is accurate |
+| `resurrect_history` | Get resurrection history for the codebase |
+
+#### Genetics Tools
+
+| Tool | Purpose |
+|------|---------|
+| `genetics_dna` | Extract the DNA (core patterns) of a code unit |
+| `genetics_lineage` | Trace the lineage of a code unit through evolution |
+| `genetics_mutations` | Detect mutations (unexpected changes) in code patterns |
+| `genetics_diseases` | Diagnose inherited code diseases (anti-patterns passed through lineage) |
+
+#### Telepathy Tools
+
+| Tool | Purpose |
+|------|---------|
+| `telepathy_connect` | Establish telepathic connection between codebases |
+| `telepathy_broadcast` | Broadcast a code insight to connected codebases |
+| `telepathy_listen` | Listen for insights from connected codebases |
+| `telepathy_consensus` | Find consensus patterns across connected codebases |
+
+#### Soul Tools
+
+| Tool | Purpose |
+|------|---------|
+| `soul_extract` | Extract the soul (essential purpose and values) of code |
+| `soul_compare` | Compare souls across code reincarnations |
+| `soul_preserve` | Preserve a code soul during rewrite |
+| `soul_reincarnate` | Guide a soul to a new code manifestation |
+| `soul_karma` | Analyze the karma (positive/negative impact history) of code |
+
+#### Omniscience Tools
+
+| Tool | Purpose |
+|------|---------|
+| `omniscience_search` | Search across global code knowledge |
+| `omniscience_best` | Find the best implementation of a concept globally |
+| `omniscience_census` | Global code census for a concept |
+| `omniscience_vuln` | Scan for known vulnerability patterns |
+| `omniscience_trend` | Find emerging or declining code patterns |
+| `omniscience_compare` | Compare your code to global best practices |
+| `omniscience_api_usage` | Find all usages of an API globally |
+| `omniscience_solve` | Find code that solves a specific problem |
+
 ## Universal MCP entry
 
 ```json
