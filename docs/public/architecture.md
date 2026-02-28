@@ -60,7 +60,7 @@ The core library. All semantic code analysis logic lives here.
 The MCP server binary (`agentic-codebase-mcp`).
 
 - JSON-RPC 2.0 over stdio (default) or HTTP/SSE (with `sse` feature)
-- 60+ MCP tools across core, grounding, workspace, translation, and invention categories
+- 60+ MCP tools across core, grounding, workspace, translation, and advanced categories
 - MCP resources via `acb://` URI scheme
 - 2 MCP prompts (analyse_unit, explain_coupling)
 - Auto-graph resolution: detects repository root, compiles graph on first use

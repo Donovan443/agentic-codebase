@@ -214,7 +214,7 @@ All tools exposed by the `agentic-codebase-mcp` MCP server:
 | `translation_progress` | Get migration progress statistics |
 | `translation_remaining` | List symbols not yet ported |
 
-### Invention Tools
+### Advanced Tools
 
 #### Resurrection Tools
 
